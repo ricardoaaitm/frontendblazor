@@ -1,0 +1,131 @@
+@page "/tipoindicador"
+@using System.Collections.Generic
+@using Services
+@inject ServicioEntidad servicioEntidad
+@inject NavigationManager navegacionManager
+
+<PageTitle>lista de tipoindicadors</PageTitle>
+
+<h1>tipoindicador</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="Creartipoindicador" disabled="@isCreando">Crear tipoindicador</button>
+</div>
+
+@if (cargando)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (tipoindicador == null || tipoindicador.Count == 0)
+{
+    <p>No hay tipoindicadors disponibles.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tipoindicadorItem in tipoindicador)
+                {
+                    <tr>
+                        <td>@ObtenerValor(tipoindicadorItem, "id")</td>
+                        <td>@ObtenerValor(tipoindicadorItem, "nombre")</td>
+                        <td>
+                            <button class="btn btn-warning" @onclick="() => Editartipoindicador(tipoindicadorItem)">Editar</button>
+                            <button class="btn btn-danger" @onclick="() => Eliminartipoindicador(tipoindicadorItem)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (errorMensaje != null)
+{
+    <div class="alert alert-danger">
+        Error: @errorMensaje
+    </div>
+}
+
+@code {
+    private List<Dictionary<string, object>> tipoindicador = new List<Dictionary<string, object>>();
+    private bool cargando = true;
+    private string? errorMensaje = null;
+    private bool isCreando = false;
+
+    private const string PROYECTO = "proyecto";
+    private const string TABLA = "tipoindicador";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargartipoindicador();
+    }
+
+    private async Task Cargartipoindicador()
+    {
+        cargando = true;
+        errorMensaje = null;
+
+        try
+        {
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            tipoindicador = resultado ?? new List<Dictionary<string, object>>();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar tipoindicador: {ex.Message}";
+            tipoindicador = new List<Dictionary<string, object>>();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        if (diccionario != null && diccionario.TryGetValue(clave, out var valor))
+        {
+            return valor?.ToString() ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    private async Task Creartipoindicador()
+    {
+        isCreando = true;
+        // Lógica para crear tipoindicador
+        // Puedes implementar un formulario para agregar una nueva tipoindicador
+        await Cargartipoindicador();
+        isCreando = false;
+    }
+
+    private async Task Editartipoindicador(Dictionary<string, object> tipoindicadorAEditar)
+    {
+        // Lógica para editar tipoindicador
+        // Puedes navegar a una página para editar o mostrar un formulario de edición
+        await Task.Delay(1000); // Simulación de operación
+        await Cargartipoindicador();  // Refrescar los datos
+    }
+
+    private async Task Eliminartipoindicador(Dictionary<string, object> tipoindicadorAEliminar)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, tipoindicadorAEliminar["id"].ToString(), "id");
+            await Cargartipoindicador();  // Refrescar los datos después de la eliminación
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al eliminar tipoindicador: {ex.Message}";
+        }
+    }
+}

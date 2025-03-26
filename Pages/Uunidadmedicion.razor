@@ -1,0 +1,131 @@
+@page "/unidadmedicion"
+@using System.Collections.Generic
+@using Services
+@inject ServicioEntidad servicioEntidad
+@inject NavigationManager navegacionManager
+
+<PageTitle>lista de unidadmedicions</PageTitle>
+
+<h1>unidadmedicion</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="Crearunidadmedicion" disabled="@isCreando">Crear unidadmedicion</button>
+</div>
+
+@if (cargando)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (unidadmedicion == null || unidadmedicion.Count == 0)
+{
+    <p>No hay unidadmedicions disponibles.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>Descripcion</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var unidadmedicionItem in unidadmedicion)
+                {
+                    <tr>
+                        <td>@ObtenerValor(unidadmedicionItem, "id")</td>
+                        <td>@ObtenerValor(unidadmedicionItem, "descripcion")</td>
+                        <td>
+                            <button class="btn btn-warning" @onclick="() => Editarunidadmedicion(unidadmedicionItem)">Editar</button>
+                            <button class="btn btn-danger" @onclick="() => Eliminarunidadmedicion(unidadmedicionItem)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (errorMensaje != null)
+{
+    <div class="alert alert-danger">
+        Error: @errorMensaje
+    </div>
+}
+
+@code {
+    private List<Dictionary<string, object>> unidadmedicion = new List<Dictionary<string, object>>();
+    private bool cargando = true;
+    private string? errorMensaje = null;
+    private bool isCreando = false;
+
+    private const string PROYECTO = "proyecto";
+    private const string TABLA = "unidadmedicion";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargarunidadmedicion();
+    }
+
+    private async Task Cargarunidadmedicion()
+    {
+        cargando = true;
+        errorMensaje = null;
+
+        try
+        {
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            unidadmedicion = resultado ?? new List<Dictionary<string, object>>();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar unidadmedicion: {ex.Message}";
+            unidadmedicion = new List<Dictionary<string, object>>();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        if (diccionario != null && diccionario.TryGetValue(clave, out var valor))
+        {
+            return valor?.ToString() ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    private async Task Crearunidadmedicion()
+    {
+        isCreando = true;
+        // Lógica para crear unidadmedicion
+        // Puedes implementar un formulario para agregar una nueva unidadmedicion
+        await Cargarunidadmedicion();
+        isCreando = false;
+    }
+
+    private async Task Editarunidadmedicion(Dictionary<string, object> unidadmedicionAEditar)
+    {
+        // Lógica para editar unidadmedicion
+        // Puedes navegar a una página para editar o mostrar un formulario de edición
+        await Task.Delay(1000); // Simulación de operación
+        await Cargarunidadmedicion();  // Refrescar los datos
+    }
+
+    private async Task Eliminarunidadmedicion(Dictionary<string, object> unidadmedicionAEliminar)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, unidadmedicionAEliminar["id"].ToString(), "id");
+            await Cargarunidadmedicion();  // Refrescar los datos después de la eliminación
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al eliminar unidadmedicion: {ex.Message}";
+        }
+    }
+}

@@ -1,39 +1,94 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿<!-- Barra superior de navegación -->
+<div class="top-row ps-3 navbar navbar-dark">
+    <!-- Contenedor del menú de navegación -->
     <div class="container-fluid">
+        <!-- Enlace al nombre de la aplicación (generalmente en la parte superior izquierda) -->
         <a class="navbar-brand" href="">FrontBlazor</a>
+        
+        <!-- Botón para colapsar/expandir el menú (cuando se ve en dispositivos móviles) -->
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
+            <span class="navbar-toggler-icon"></span> <!-- Icono para el botón de colapso -->
         </button>
     </div>
 </div>
 
+<!--------------------------------------------------->
+<!-- Menú lateral (colapsable) que contiene los enlaces de navegación -->
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <!-- Contenedor que organiza los elementos de navegación en columnas -->
     <nav class="nav flex-column">
+        <!-- Enlace a la página principal (Home) -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <!-- Icono de inicio -->
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
+<!--------------------------------------------------->
+        <!-- Enlace a la página de Fuentes -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link" href="/fuente">
+                <!-- Icono para fuentes -->
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Fuente
             </NavLink>
         </div>
+<!--------------------------------------------------->
+         <!-- Enlace a la página de Represenvisual -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            <!-- href="represenvisual": enlace a la página de contador -->
+            <NavLink class="nav-link" href="represenvisual">
+                <!-- Icono para la opción represenvisual (símbolo de más en un cuadrado) -->
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Represenvisual
             </NavLink>
         </div>
+<!--------------------------------------------------->
+         <!-- Enlace a la página de Sentido -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/sentido">
+                <!-- Icono para Sentido -->
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Sentido
+            </NavLink>
+        </div>
+<!--------------------------------------------------->
+         <!-- Enlace a la página de tipoactor -->
+        <div class="nav-item px-3">
+            <!-- href="tipoactor": enlace a la página de contador -->
+            <NavLink class="nav-link" href="tipoactor">
+                <!-- Icono para la opción tipoactor (símbolo de más en un cuadrado) -->
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> tipoactor
+            </NavLink>
+        </div>
+<!--------------------------------------------------->
+         <!-- Enlace a la página de tipoindicador -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/tipoindicador">
+                <!-- Icono para tipoindicador -->
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> tipoindicador
+            </NavLink>
+        </div>
+<!--------------------------------------------------->
+         <!-- Enlace a la página de unidadmedicion -->
+        <div class="nav-item px-3">
+            <!-- href="unidadmedicion": enlace a la página de contador -->
+            <NavLink class="nav-link" href="unidadmedicion">
+                <!-- Icono para la opción unidadmedicion (símbolo de más en un cuadrado) -->
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> unidadmedicion
+            </NavLink>
+        </div>
+
     </nav>
 </div>
 
 @code {
+    // Variable booleana para gestionar si el menú de navegación está colapsado o expandido
     private bool collapseNavMenu = true;
 
+    // Propiedad que devuelve la clase CSS para colapsar el menú si está en estado 'true'
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    // Método para alternar el estado del menú (expandido o colapsado) cuando se hace clic en el botón
     private void ToggleNavMenu()
     {
-        collapseNavMenu = !collapseNavMenu;
+        collapseNavMenu = !collapseNavMenu; // Cambia el valor de la variable, alternando entre true y false
     }
 }

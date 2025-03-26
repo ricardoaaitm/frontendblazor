@@ -1,0 +1,131 @@
+@page "/represenvisual"
+@using System.Collections.Generic
+@using Services
+@inject ServicioEntidad servicioEntidad
+@inject NavigationManager navegacionManager
+
+<PageTitle>lista de represenvisuals</PageTitle>
+
+<h1>represenvisual</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="Crearrepresenvisual" disabled="@isCreando">Crear represenvisual</button>
+</div>
+
+@if (cargando)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (represenvisual == null || represenvisual.Count == 0)
+{
+    <p>No hay represenvisuals disponibles.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var represenvisualItem in represenvisual)
+                {
+                    <tr>
+                        <td>@ObtenerValor(represenvisualItem, "id")</td>
+                        <td>@ObtenerValor(represenvisualItem, "nombre")</td>
+                        <td>
+                            <button class="btn btn-warning" @onclick="() => Editarrepresenvisual(represenvisualItem)">Editar</button>
+                            <button class="btn btn-danger" @onclick="() => Eliminarrepresenvisual(represenvisualItem)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (errorMensaje != null)
+{
+    <div class="alert alert-danger">
+        Error: @errorMensaje
+    </div>
+}
+
+@code {
+    private List<Dictionary<string, object>> represenvisual = new List<Dictionary<string, object>>();
+    private bool cargando = true;
+    private string? errorMensaje = null;
+    private bool isCreando = false;
+
+    private const string PROYECTO = "proyecto";
+    private const string TABLA = "represenvisual";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargarrepresenvisual();
+    }
+
+    private async Task Cargarrepresenvisual()
+    {
+        cargando = true;
+        errorMensaje = null;
+
+        try
+        {
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            represenvisual = resultado ?? new List<Dictionary<string, object>>();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar represenvisual: {ex.Message}";
+            represenvisual = new List<Dictionary<string, object>>();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        if (diccionario != null && diccionario.TryGetValue(clave, out var valor))
+        {
+            return valor?.ToString() ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    private async Task Crearrepresenvisual()
+    {
+        isCreando = true;
+        // Lógica para crear represenvisual
+        // Puedes implementar un formulario para agregar una nueva represenvisual
+        await Cargarrepresenvisual();
+        isCreando = false;
+    }
+
+    private async Task Editarrepresenvisual(Dictionary<string, object> represenvisualAEditar)
+    {
+        // Lógica para editar represenvisual
+        // Puedes navegar a una página para editar o mostrar un formulario de edición
+        await Task.Delay(1000); // Simulación de operación
+        await Cargarrepresenvisual();  // Refrescar los datos
+    }
+
+    private async Task Eliminarrepresenvisual(Dictionary<string, object> represenvisualAEliminar)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, represenvisualAEliminar["id"].ToString(), "id");
+            await Cargarrepresenvisual();  // Refrescar los datos después de la eliminación
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al eliminar represenvisual: {ex.Message}";
+        }
+    }
+}

@@ -1,0 +1,131 @@
+@page "/fuente"
+@using System.Collections.Generic
+@using Services
+@inject ServicioEntidad servicioEntidad
+@inject NavigationManager navegacionManager
+
+<PageTitle>lista de Fuentes</PageTitle>
+
+<h1>Fuente</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="CrearFuente" disabled="@isCreando">Crear Fuente</button>
+</div>
+
+@if (cargando)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (fuente == null || fuente.Count == 0)
+{
+    <p>No hay fuentes disponibles.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var fuenteItem in fuente)
+                {
+                    <tr>
+                        <td>@ObtenerValor(fuenteItem, "id")</td>
+                        <td>@ObtenerValor(fuenteItem, "nombre")</td>
+                        <td>
+                            <button class="btn btn-warning" @onclick="() => EditarFuente(fuenteItem)">Editar</button>
+                            <button class="btn btn-danger" @onclick="() => EliminarFuente(fuenteItem)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (errorMensaje != null)
+{
+    <div class="alert alert-danger">
+        Error: @errorMensaje
+    </div>
+}
+
+@code {
+    private List<Dictionary<string, object>> fuente = new List<Dictionary<string, object>>();
+    private bool cargando = true;
+    private string? errorMensaje = null;
+    private bool isCreando = false;
+
+    private const string PROYECTO = "proyecto";
+    private const string TABLA = "fuente";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarFuente();
+    }
+
+    private async Task CargarFuente()
+    {
+        cargando = true;
+        errorMensaje = null;
+
+        try
+        {
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            fuente = resultado ?? new List<Dictionary<string, object>>();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar fuente: {ex.Message}";
+            fuente = new List<Dictionary<string, object>>();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        if (diccionario != null && diccionario.TryGetValue(clave, out var valor))
+        {
+            return valor?.ToString() ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    private async Task CrearFuente()
+    {
+        isCreando = true;
+        // Lógica para crear fuente
+        // Puedes implementar un formulario para agregar una nueva fuente
+        await CargarFuente();
+        isCreando = false;
+    }
+
+    private async Task EditarFuente(Dictionary<string, object> fuenteAEditar)
+    {
+        // Lógica para editar fuente
+        // Puedes navegar a una página para editar o mostrar un formulario de edición
+        await Task.Delay(1000); // Simulación de operación
+        await CargarFuente();  // Refrescar los datos
+    }
+
+    private async Task EliminarFuente(Dictionary<string, object> fuenteAEliminar)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, fuenteAEliminar["id"].ToString(), "id");
+            await CargarFuente();  // Refrescar los datos después de la eliminación
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al eliminar fuente: {ex.Message}";
+        }
+    }
+}

@@ -1,0 +1,131 @@
+@page "/tipoactor"
+@using System.Collections.Generic
+@using Services
+@inject ServicioEntidad servicioEntidad
+@inject NavigationManager navegacionManager
+
+<PageTitle>lista de tipoactors</PageTitle>
+
+<h1>tipoactor</h1>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="Creartipoactor" disabled="@isCreando">Crear tipoactor</button>
+</div>
+
+@if (cargando)
+{
+    <p><em>Cargando...</em></p>
+}
+else if (tipoactor == null || tipoactor.Count == 0)
+{
+    <p>No hay tipoactors disponibles.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tipoactorItem in tipoactor)
+                {
+                    <tr>
+                        <td>@ObtenerValor(tipoactorItem, "id")</td>
+                        <td>@ObtenerValor(tipoactorItem, "nombre")</td>
+                        <td>
+                            <button class="btn btn-warning" @onclick="() => Editartipoactor(tipoactorItem)">Editar</button>
+                            <button class="btn btn-danger" @onclick="() => Eliminartipoactor(tipoactorItem)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (errorMensaje != null)
+{
+    <div class="alert alert-danger">
+        Error: @errorMensaje
+    </div>
+}
+
+@code {
+    private List<Dictionary<string, object>> tipoactor = new List<Dictionary<string, object>>();
+    private bool cargando = true;
+    private string? errorMensaje = null;
+    private bool isCreando = false;
+
+    private const string PROYECTO = "proyecto";
+    private const string TABLA = "tipoactor";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargartipoactor();
+    }
+
+    private async Task Cargartipoactor()
+    {
+        cargando = true;
+        errorMensaje = null;
+
+        try
+        {
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            tipoactor = resultado ?? new List<Dictionary<string, object>>();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar tipoactor: {ex.Message}";
+            tipoactor = new List<Dictionary<string, object>>();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        if (diccionario != null && diccionario.TryGetValue(clave, out var valor))
+        {
+            return valor?.ToString() ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    private async Task Creartipoactor()
+    {
+        isCreando = true;
+        // Lógica para crear tipoactor
+        // Puedes implementar un formulario para agregar una nueva tipoactor
+        await Cargartipoactor();
+        isCreando = false;
+    }
+
+    private async Task Editartipoactor(Dictionary<string, object> tipoactorAEditar)
+    {
+        // Lógica para editar tipoactor
+        // Puedes navegar a una página para editar o mostrar un formulario de edición
+        await Task.Delay(1000); // Simulación de operación
+        await Cargartipoactor();  // Refrescar los datos
+    }
+
+    private async Task Eliminartipoactor(Dictionary<string, object> tipoactorAEliminar)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, tipoactorAEliminar["id"].ToString(), "id");
+            await Cargartipoactor();  // Refrescar los datos después de la eliminación
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al eliminar tipoactor: {ex.Message}";
+        }
+    }
+}
