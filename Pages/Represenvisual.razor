@@ -3,49 +3,64 @@
 @using Services
 @inject ServicioEntidad servicioEntidad
 @inject NavigationManager navegacionManager
+@inject IJSRuntime jsRuntime
 
-<PageTitle>lista de represenvisuals</PageTitle>
+<PageTitle>Lista de represenvisuals</PageTitle>
 
 <h1>represenvisual</h1>
 
-<div class="mb-3">
-    <button class="btn btn-primary" @onclick="Crearrepresenvisual" disabled="@isCreando">Crear represenvisual</button>
-</div>
-
-@if (cargando)
+@if (editando || creando)
 {
-    <p><em>Cargando...</em></p>
-}
-else if (represenvisual == null || represenvisual.Count == 0)
-{
-    <p>No hay represenvisuals disponibles.</p>
+    <EditForm Model="@represenvisualActual" OnValidSubmit="Guardarrepresenvisual">
+        <div class="mb-3">
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" class="form-control" @bind-value="represenvisualActual.Nombre" required />
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+    </EditForm>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>id</th>
-                    <th>Nombre</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var represenvisualItem in represenvisual)
-                {
-                    <tr>
-                        <td>@ObtenerValor(represenvisualItem, "id")</td>
-                        <td>@ObtenerValor(represenvisualItem, "nombre")</td>
-                        <td>
-                            <button class="btn btn-warning" @onclick="() => Editarrepresenvisual(represenvisualItem)">Editar</button>
-                            <button class="btn btn-danger" @onclick="() => Eliminarrepresenvisual(represenvisualItem)">Eliminar</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear represenvisual</button>
     </div>
+
+    @if (cargando)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (represenvisual == null || represenvisual.Count == 0)
+    {
+        <p>No hay represenvisuals disponibles.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var represenvisualItem in represenvisual)
+                    {
+                        <tr>
+                            <td>@ObtenerValor(represenvisualItem, "id")</td>
+                            <td>@ObtenerValor(represenvisualItem, "nombre")</td>
+                            <td>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(represenvisualItem)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(represenvisualItem)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 }
 
 @if (errorMensaje != null)
@@ -59,7 +74,10 @@ else
     private List<Dictionary<string, object>> represenvisual = new List<Dictionary<string, object>>();
     private bool cargando = true;
     private string? errorMensaje = null;
-    private bool isCreando = false;
+    private bool creando = false;
+    private bool editando = false;
+
+    private represenvisualModel represenvisualActual = new represenvisualModel();
 
     private const string PROYECTO = "proyecto";
     private const string TABLA = "represenvisual";
@@ -99,33 +117,106 @@ else
         return string.Empty;
     }
 
-    private async Task Crearrepresenvisual()
+    private void IniciarCreacion()
     {
-        isCreando = true;
-        // Lógica para crear represenvisual
-        // Puedes implementar un formulario para agregar una nueva represenvisual
-        await Cargarrepresenvisual();
-        isCreando = false;
+        creando = true;
+        editando = false;
+        represenvisualActual = new represenvisualModel();
     }
 
-    private async Task Editarrepresenvisual(Dictionary<string, object> represenvisualAEditar)
+    private void IniciarEdicion(Dictionary<string, object> represenvisualAEditar)
     {
-        // Lógica para editar represenvisual
-        // Puedes navegar a una página para editar o mostrar un formulario de edición
-        await Task.Delay(1000); // Simulación de operación
-        await Cargarrepresenvisual();  // Refrescar los datos
+        if (represenvisualAEditar.TryGetValue("id", out var idObj) && represenvisualAEditar.TryGetValue("nombre", out var nombreObj))
+        {
+            represenvisualActual = new represenvisualModel
+            {
+                Id = idObj?.ToString() ?? string.Empty,
+                Nombre = nombreObj?.ToString() ?? string.Empty
+            };
+
+            editando = true;
+            creando = false;
+        }
+        else
+        {
+            errorMensaje = "Error: No se pudo cargar la información de la represenvisual.";
+        }
     }
 
-    private async Task Eliminarrepresenvisual(Dictionary<string, object> represenvisualAEliminar)
+    private async Task Guardarrepresenvisual()
     {
         try
         {
-            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, represenvisualAEliminar["id"].ToString(), "id");
-            await Cargarrepresenvisual();  // Refrescar los datos después de la eliminación
+            if (creando)
+            {
+                await servicioEntidad.CrearAsync(PROYECTO, TABLA, new Dictionary<string, object>
+                {
+                    { "nombre", represenvisualActual.Nombre }
+                });
+            }
+            else if (editando)
+            {
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", represenvisualActual.Id, new Dictionary<string, object>
+                {
+                    { "nombre", represenvisualActual.Nombre }
+                });
+            }
+
+            creando = false;
+            editando = false;
+            await Cargarrepresenvisual();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al guardar represenvisual: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        creando = false;
+        editando = false;
+    }
+
+    private async Task ConfirmarEliminar(Dictionary<string, object> represenvisualAEliminar)
+    {
+        if (!represenvisualAEliminar.TryGetValue("id", out var idObj) || idObj == null)
+        {
+            errorMensaje = "Error: La represenvisual no tiene un ID válido.";
+            return;
+        }
+
+        string id = idObj.ToString()?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(id))
+        {
+            errorMensaje = "Error: ID inválido.";
+            return;
+        }
+
+        bool confirmacion = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar la represenvisual con ID {id}?");
+        if (confirmacion)
+        {
+            await Eliminarrepresenvisual(id);
+        }
+    }
+
+    private async Task Eliminarrepresenvisual(string id)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
+            await Cargarrepresenvisual();
         }
         catch (Exception ex)
         {
             errorMensaje = $"Error al eliminar represenvisual: {ex.Message}";
         }
+    }
+
+    private class represenvisualModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
     }
 }

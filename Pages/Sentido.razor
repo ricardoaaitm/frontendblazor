@@ -3,49 +3,64 @@
 @using Services
 @inject ServicioEntidad servicioEntidad
 @inject NavigationManager navegacionManager
+@inject IJSRuntime jsRuntime
 
-<PageTitle>lista de sentidos</PageTitle>
+<PageTitle>Lista de sentidos</PageTitle>
 
 <h1>sentido</h1>
 
-<div class="mb-3">
-    <button class="btn btn-primary" @onclick="Crearsentido" disabled="@isCreando">Crear sentido</button>
-</div>
-
-@if (cargando)
+@if (editando || creando)
 {
-    <p><em>Cargando...</em></p>
-}
-else if (sentido == null || sentido.Count == 0)
-{
-    <p>No hay sentidos disponibles.</p>
+    <EditForm Model="@sentidoActual" OnValidSubmit="Guardarsentido">
+        <div class="mb-3">
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" class="form-control" @bind-value="sentidoActual.Nombre" required />
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+    </EditForm>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>id</th>
-                    <th>Nombre</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var sentidoItem in sentido)
-                {
-                    <tr>
-                        <td>@ObtenerValor(sentidoItem, "id")</td>
-                        <td>@ObtenerValor(sentidoItem, "nombre")</td>
-                        <td>
-                            <button class="btn btn-warning" @onclick="() => Editarsentido(sentidoItem)">Editar</button>
-                            <button class="btn btn-danger" @onclick="() => Eliminarsentido(sentidoItem)">Eliminar</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear sentido</button>
     </div>
+
+    @if (cargando)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (sentido == null || sentido.Count == 0)
+    {
+        <p>No hay sentidos disponibles.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sentidoItem in sentido)
+                    {
+                        <tr>
+                            <td>@ObtenerValor(sentidoItem, "id")</td>
+                            <td>@ObtenerValor(sentidoItem, "nombre")</td>
+                            <td>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(sentidoItem)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(sentidoItem)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 }
 
 @if (errorMensaje != null)
@@ -59,7 +74,10 @@ else
     private List<Dictionary<string, object>> sentido = new List<Dictionary<string, object>>();
     private bool cargando = true;
     private string? errorMensaje = null;
-    private bool isCreando = false;
+    private bool creando = false;
+    private bool editando = false;
+
+    private sentidoModel sentidoActual = new sentidoModel();
 
     private const string PROYECTO = "proyecto";
     private const string TABLA = "sentido";
@@ -99,33 +117,106 @@ else
         return string.Empty;
     }
 
-    private async Task Crearsentido()
+    private void IniciarCreacion()
     {
-        isCreando = true;
-        // Lógica para crear sentido
-        // Puedes implementar un formulario para agregar una nueva sentido
-        await Cargarsentido();
-        isCreando = false;
+        creando = true;
+        editando = false;
+        sentidoActual = new sentidoModel();
     }
 
-    private async Task Editarsentido(Dictionary<string, object> sentidoAEditar)
+    private void IniciarEdicion(Dictionary<string, object> sentidoAEditar)
     {
-        // Lógica para editar sentido
-        // Puedes navegar a una página para editar o mostrar un formulario de edición
-        await Task.Delay(1000); // Simulación de operación
-        await Cargarsentido();  // Refrescar los datos
+        if (sentidoAEditar.TryGetValue("id", out var idObj) && sentidoAEditar.TryGetValue("nombre", out var nombreObj))
+        {
+            sentidoActual = new sentidoModel
+            {
+                Id = idObj?.ToString() ?? string.Empty,
+                Nombre = nombreObj?.ToString() ?? string.Empty
+            };
+
+            editando = true;
+            creando = false;
+        }
+        else
+        {
+            errorMensaje = "Error: No se pudo cargar la información de la sentido.";
+        }
     }
 
-    private async Task Eliminarsentido(Dictionary<string, object> sentidoAEliminar)
+    private async Task Guardarsentido()
     {
         try
         {
-            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, sentidoAEliminar["id"].ToString(), "id");
-            await Cargarsentido();  // Refrescar los datos después de la eliminación
+            if (creando)
+            {
+                await servicioEntidad.CrearAsync(PROYECTO, TABLA, new Dictionary<string, object>
+                {
+                    { "nombre", sentidoActual.Nombre }
+                });
+            }
+            else if (editando)
+            {
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", sentidoActual.Id, new Dictionary<string, object>
+                {
+                    { "nombre", sentidoActual.Nombre }
+                });
+            }
+
+            creando = false;
+            editando = false;
+            await Cargarsentido();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al guardar sentido: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        creando = false;
+        editando = false;
+    }
+
+    private async Task ConfirmarEliminar(Dictionary<string, object> sentidoAEliminar)
+    {
+        if (!sentidoAEliminar.TryGetValue("id", out var idObj) || idObj == null)
+        {
+            errorMensaje = "Error: La sentido no tiene un ID válido.";
+            return;
+        }
+
+        string id = idObj.ToString()?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(id))
+        {
+            errorMensaje = "Error: ID inválido.";
+            return;
+        }
+
+        bool confirmacion = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar la sentido con ID {id}?");
+        if (confirmacion)
+        {
+            await Eliminarsentido(id);
+        }
+    }
+
+    private async Task Eliminarsentido(string id)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
+            await Cargarsentido();
         }
         catch (Exception ex)
         {
             errorMensaje = $"Error al eliminar sentido: {ex.Message}";
         }
+    }
+
+    private class sentidoModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
     }
 }

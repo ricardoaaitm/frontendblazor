@@ -3,49 +3,64 @@
 @using Services
 @inject ServicioEntidad servicioEntidad
 @inject NavigationManager navegacionManager
+@inject IJSRuntime jsRuntime
 
-<PageTitle>lista de tipoactors</PageTitle>
+<PageTitle>Lista de tipoactors</PageTitle>
 
 <h1>tipoactor</h1>
 
-<div class="mb-3">
-    <button class="btn btn-primary" @onclick="Creartipoactor" disabled="@isCreando">Crear tipoactor</button>
-</div>
-
-@if (cargando)
+@if (editando || creando)
 {
-    <p><em>Cargando...</em></p>
-}
-else if (tipoactor == null || tipoactor.Count == 0)
-{
-    <p>No hay tipoactors disponibles.</p>
+    <EditForm Model="@tipoactorActual" OnValidSubmit="Guardartipoactor">
+        <div class="mb-3">
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" class="form-control" @bind-value="tipoactorActual.Nombre" required />
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+    </EditForm>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>id</th>
-                    <th>Nombre</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var tipoactorItem in tipoactor)
-                {
-                    <tr>
-                        <td>@ObtenerValor(tipoactorItem, "id")</td>
-                        <td>@ObtenerValor(tipoactorItem, "nombre")</td>
-                        <td>
-                            <button class="btn btn-warning" @onclick="() => Editartipoactor(tipoactorItem)">Editar</button>
-                            <button class="btn btn-danger" @onclick="() => Eliminartipoactor(tipoactorItem)">Eliminar</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear tipoactor</button>
     </div>
+
+    @if (cargando)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (tipoactor == null || tipoactor.Count == 0)
+    {
+        <p>No hay tipoactors disponibles.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tipoactorItem in tipoactor)
+                    {
+                        <tr>
+                            <td>@ObtenerValor(tipoactorItem, "id")</td>
+                            <td>@ObtenerValor(tipoactorItem, "nombre")</td>
+                            <td>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(tipoactorItem)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(tipoactorItem)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 }
 
 @if (errorMensaje != null)
@@ -59,7 +74,10 @@ else
     private List<Dictionary<string, object>> tipoactor = new List<Dictionary<string, object>>();
     private bool cargando = true;
     private string? errorMensaje = null;
-    private bool isCreando = false;
+    private bool creando = false;
+    private bool editando = false;
+
+    private tipoactorModel tipoactorActual = new tipoactorModel();
 
     private const string PROYECTO = "proyecto";
     private const string TABLA = "tipoactor";
@@ -99,33 +117,106 @@ else
         return string.Empty;
     }
 
-    private async Task Creartipoactor()
+    private void IniciarCreacion()
     {
-        isCreando = true;
-        // Lógica para crear tipoactor
-        // Puedes implementar un formulario para agregar una nueva tipoactor
-        await Cargartipoactor();
-        isCreando = false;
+        creando = true;
+        editando = false;
+        tipoactorActual = new tipoactorModel();
     }
 
-    private async Task Editartipoactor(Dictionary<string, object> tipoactorAEditar)
+    private void IniciarEdicion(Dictionary<string, object> tipoactorAEditar)
     {
-        // Lógica para editar tipoactor
-        // Puedes navegar a una página para editar o mostrar un formulario de edición
-        await Task.Delay(1000); // Simulación de operación
-        await Cargartipoactor();  // Refrescar los datos
+        if (tipoactorAEditar.TryGetValue("id", out var idObj) && tipoactorAEditar.TryGetValue("nombre", out var nombreObj))
+        {
+            tipoactorActual = new tipoactorModel
+            {
+                Id = idObj?.ToString() ?? string.Empty,
+                Nombre = nombreObj?.ToString() ?? string.Empty
+            };
+
+            editando = true;
+            creando = false;
+        }
+        else
+        {
+            errorMensaje = "Error: No se pudo cargar la información de la tipoactor.";
+        }
     }
 
-    private async Task Eliminartipoactor(Dictionary<string, object> tipoactorAEliminar)
+    private async Task Guardartipoactor()
     {
         try
         {
-            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, tipoactorAEliminar["id"].ToString(), "id");
-            await Cargartipoactor();  // Refrescar los datos después de la eliminación
+            if (creando)
+            {
+                await servicioEntidad.CrearAsync(PROYECTO, TABLA, new Dictionary<string, object>
+                {
+                    { "nombre", tipoactorActual.Nombre }
+                });
+            }
+            else if (editando)
+            {
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", tipoactorActual.Id, new Dictionary<string, object>
+                {
+                    { "nombre", tipoactorActual.Nombre }
+                });
+            }
+
+            creando = false;
+            editando = false;
+            await Cargartipoactor();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al guardar tipoactor: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        creando = false;
+        editando = false;
+    }
+
+    private async Task ConfirmarEliminar(Dictionary<string, object> tipoactorAEliminar)
+    {
+        if (!tipoactorAEliminar.TryGetValue("id", out var idObj) || idObj == null)
+        {
+            errorMensaje = "Error: La tipoactor no tiene un ID válido.";
+            return;
+        }
+
+        string id = idObj.ToString()?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(id))
+        {
+            errorMensaje = "Error: ID inválido.";
+            return;
+        }
+
+        bool confirmacion = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar la tipoactor con ID {id}?");
+        if (confirmacion)
+        {
+            await Eliminartipoactor(id);
+        }
+    }
+
+    private async Task Eliminartipoactor(string id)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
+            await Cargartipoactor();
         }
         catch (Exception ex)
         {
             errorMensaje = $"Error al eliminar tipoactor: {ex.Message}";
         }
+    }
+
+    private class tipoactorModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
     }
 }
