@@ -3,49 +3,64 @@
 @using Services
 @inject ServicioEntidad servicioEntidad
 @inject NavigationManager navegacionManager
+@inject IJSRuntime jsRuntime
 
-<PageTitle>lista de Fuentes</PageTitle>
+<PageTitle>Lista de Fuentes</PageTitle>
 
 <h1>Fuente</h1>
 
-<div class="mb-3">
-    <button class="btn btn-primary" @onclick="CrearFuente" disabled="@isCreando">Crear Fuente</button>
-</div>
-
-@if (cargando)
+@if (editando || creando)
 {
-    <p><em>Cargando...</em></p>
-}
-else if (fuente == null || fuente.Count == 0)
-{
-    <p>No hay fuentes disponibles.</p>
+    <EditForm Model="@fuenteActual" OnValidSubmit="GuardarFuente">
+        <div class="mb-3">
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" class="form-control" @bind-value="fuenteActual.Nombre" required />
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+    </EditForm>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>id</th>
-                    <th>Nombre</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var fuenteItem in fuente)
-                {
-                    <tr>
-                        <td>@ObtenerValor(fuenteItem, "id")</td>
-                        <td>@ObtenerValor(fuenteItem, "nombre")</td>
-                        <td>
-                            <button class="btn btn-warning" @onclick="() => EditarFuente(fuenteItem)">Editar</button>
-                            <button class="btn btn-danger" @onclick="() => EliminarFuente(fuenteItem)">Eliminar</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear Fuente</button>
     </div>
+
+    @if (cargando)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (fuente == null || fuente.Count == 0)
+    {
+        <p>No hay fuentes disponibles.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fuenteItem in fuente)
+                    {
+                        <tr>
+                            <td>@ObtenerValor(fuenteItem, "id")</td>
+                            <td>@ObtenerValor(fuenteItem, "nombre")</td>
+                            <td>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(fuenteItem)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(fuenteItem)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 }
 
 @if (errorMensaje != null)
@@ -59,7 +74,10 @@ else
     private List<Dictionary<string, object>> fuente = new List<Dictionary<string, object>>();
     private bool cargando = true;
     private string? errorMensaje = null;
-    private bool isCreando = false;
+    private bool creando = false;
+    private bool editando = false;
+
+    private FuenteModel fuenteActual = new FuenteModel();
 
     private const string PROYECTO = "proyecto";
     private const string TABLA = "fuente";
@@ -99,33 +117,106 @@ else
         return string.Empty;
     }
 
-    private async Task CrearFuente()
+    private void IniciarCreacion()
     {
-        isCreando = true;
-        // Lógica para crear fuente
-        // Puedes implementar un formulario para agregar una nueva fuente
-        await CargarFuente();
-        isCreando = false;
+        creando = true;
+        editando = false;
+        fuenteActual = new FuenteModel();
     }
 
-    private async Task EditarFuente(Dictionary<string, object> fuenteAEditar)
+    private void IniciarEdicion(Dictionary<string, object> fuenteAEditar)
     {
-        // Lógica para editar fuente
-        // Puedes navegar a una página para editar o mostrar un formulario de edición
-        await Task.Delay(1000); // Simulación de operación
-        await CargarFuente();  // Refrescar los datos
+        if (fuenteAEditar.TryGetValue("id", out var idObj) && fuenteAEditar.TryGetValue("nombre", out var nombreObj))
+        {
+            fuenteActual = new FuenteModel
+            {
+                Id = idObj?.ToString() ?? string.Empty,
+                Nombre = nombreObj?.ToString() ?? string.Empty
+            };
+
+            editando = true;
+            creando = false;
+        }
+        else
+        {
+            errorMensaje = "Error: No se pudo cargar la información de la fuente.";
+        }
     }
 
-    private async Task EliminarFuente(Dictionary<string, object> fuenteAEliminar)
+    private async Task GuardarFuente()
     {
         try
         {
-            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, fuenteAEliminar["id"].ToString(), "id");
-            await CargarFuente();  // Refrescar los datos después de la eliminación
+            if (creando)
+            {
+                await servicioEntidad.CrearAsync(PROYECTO, TABLA, new Dictionary<string, object>
+                {
+                    { "nombre", fuenteActual.Nombre }
+                });
+            }
+            else if (editando)
+            {
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", fuenteActual.Id, new Dictionary<string, object>
+                {
+                    { "nombre", fuenteActual.Nombre }
+                });
+            }
+
+            creando = false;
+            editando = false;
+            await CargarFuente();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al guardar fuente: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        creando = false;
+        editando = false;
+    }
+
+    private async Task ConfirmarEliminar(Dictionary<string, object> fuenteAEliminar)
+    {
+        if (!fuenteAEliminar.TryGetValue("id", out var idObj) || idObj == null)
+        {
+            errorMensaje = "Error: La fuente no tiene un ID válido.";
+            return;
+        }
+
+        string id = idObj.ToString()?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(id))
+        {
+            errorMensaje = "Error: ID inválido.";
+            return;
+        }
+
+        bool confirmacion = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar la fuente con ID {id}?");
+        if (confirmacion)
+        {
+            await EliminarFuente(id);
+        }
+    }
+
+    private async Task EliminarFuente(string id)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
+            await CargarFuente();
         }
         catch (Exception ex)
         {
             errorMensaje = $"Error al eliminar fuente: {ex.Message}";
         }
+    }
+
+    private class FuenteModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
     }
 }
