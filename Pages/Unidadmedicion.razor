@@ -3,49 +3,64 @@
 @using Services
 @inject ServicioEntidad servicioEntidad
 @inject NavigationManager navegacionManager
+@inject IJSRuntime jsRuntime
 
-<PageTitle>lista de unidadmedicions</PageTitle>
+<PageTitle>Lista de unidadmedicions</PageTitle>
 
 <h1>unidadmedicion</h1>
 
-<div class="mb-3">
-    <button class="btn btn-primary" @onclick="Crearunidadmedicion" disabled="@isCreando">Crear unidadmedicion</button>
-</div>
-
-@if (cargando)
+@if (editando || creando)
 {
-    <p><em>Cargando...</em></p>
-}
-else if (unidadmedicion == null || unidadmedicion.Count == 0)
-{
-    <p>No hay unidadmedicions disponibles.</p>
+    <EditForm Model="@unidadmedicionActual" OnValidSubmit="Guardarunidadmedicion">
+        <div class="mb-3">
+            <label for="descripcion">descripcion:</label>
+            <input id="descripcion" class="form-control" @bind-value="unidadmedicionActual.descripcion" required />
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+    </EditForm>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>id</th>
-                    <th>Descripcion</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var unidadmedicionItem in unidadmedicion)
-                {
-                    <tr>
-                        <td>@ObtenerValor(unidadmedicionItem, "id")</td>
-                        <td>@ObtenerValor(unidadmedicionItem, "descripcion")</td>
-                        <td>
-                            <button class="btn btn-warning" @onclick="() => Editarunidadmedicion(unidadmedicionItem)">Editar</button>
-                            <button class="btn btn-danger" @onclick="() => Eliminarunidadmedicion(unidadmedicionItem)">Eliminar</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear unidadmedicion</button>
     </div>
+
+    @if (cargando)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (unidadmedicion == null || unidadmedicion.Count == 0)
+    {
+        <p>No hay unidadmedicions disponibles.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>descripcion</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var unidadmedicionItem in unidadmedicion)
+                    {
+                        <tr>
+                            <td>@ObtenerValor(unidadmedicionItem, "id")</td>
+                            <td>@ObtenerValor(unidadmedicionItem, "descripcion")</td>
+                            <td>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(unidadmedicionItem)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(unidadmedicionItem)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 }
 
 @if (errorMensaje != null)
@@ -59,7 +74,10 @@ else
     private List<Dictionary<string, object>> unidadmedicion = new List<Dictionary<string, object>>();
     private bool cargando = true;
     private string? errorMensaje = null;
-    private bool isCreando = false;
+    private bool creando = false;
+    private bool editando = false;
+
+    private unidadmedicionModel unidadmedicionActual = new unidadmedicionModel();
 
     private const string PROYECTO = "proyecto";
     private const string TABLA = "unidadmedicion";
@@ -99,33 +117,106 @@ else
         return string.Empty;
     }
 
-    private async Task Crearunidadmedicion()
+    private void IniciarCreacion()
     {
-        isCreando = true;
-        // Lógica para crear unidadmedicion
-        // Puedes implementar un formulario para agregar una nueva unidadmedicion
-        await Cargarunidadmedicion();
-        isCreando = false;
+        creando = true;
+        editando = false;
+        unidadmedicionActual = new unidadmedicionModel();
     }
 
-    private async Task Editarunidadmedicion(Dictionary<string, object> unidadmedicionAEditar)
+    private void IniciarEdicion(Dictionary<string, object> unidadmedicionAEditar)
     {
-        // Lógica para editar unidadmedicion
-        // Puedes navegar a una página para editar o mostrar un formulario de edición
-        await Task.Delay(1000); // Simulación de operación
-        await Cargarunidadmedicion();  // Refrescar los datos
+        if (unidadmedicionAEditar.TryGetValue("id", out var idObj) && unidadmedicionAEditar.TryGetValue("descripcion", out var descripcionObj))
+        {
+            unidadmedicionActual = new unidadmedicionModel
+            {
+                Id = idObj?.ToString() ?? string.Empty,
+                descripcion = descripcionObj?.ToString() ?? string.Empty
+            };
+
+            editando = true;
+            creando = false;
+        }
+        else
+        {
+            errorMensaje = "Error: No se pudo cargar la información de la unidadmedicion.";
+        }
     }
 
-    private async Task Eliminarunidadmedicion(Dictionary<string, object> unidadmedicionAEliminar)
+    private async Task Guardarunidadmedicion()
     {
         try
         {
-            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, unidadmedicionAEliminar["id"].ToString(), "id");
-            await Cargarunidadmedicion();  // Refrescar los datos después de la eliminación
+            if (creando)
+            {
+                await servicioEntidad.CrearAsync(PROYECTO, TABLA, new Dictionary<string, object>
+                {
+                    { "descripcion", unidadmedicionActual.descripcion }
+                });
+            }
+            else if (editando)
+            {
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", unidadmedicionActual.Id, new Dictionary<string, object>
+                {
+                    { "descripcion", unidadmedicionActual.descripcion }
+                });
+            }
+
+            creando = false;
+            editando = false;
+            await Cargarunidadmedicion();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al guardar unidadmedicion: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        creando = false;
+        editando = false;
+    }
+
+    private async Task ConfirmarEliminar(Dictionary<string, object> unidadmedicionAEliminar)
+    {
+        if (!unidadmedicionAEliminar.TryGetValue("id", out var idObj) || idObj == null)
+        {
+            errorMensaje = "Error: La unidadmedicion no tiene un ID válido.";
+            return;
+        }
+
+        string id = idObj.ToString()?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(id))
+        {
+            errorMensaje = "Error: ID inválido.";
+            return;
+        }
+
+        bool confirmacion = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar la unidadmedicion con ID {id}?");
+        if (confirmacion)
+        {
+            await Eliminarunidadmedicion(id);
+        }
+    }
+
+    private async Task Eliminarunidadmedicion(string id)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
+            await Cargarunidadmedicion();
         }
         catch (Exception ex)
         {
             errorMensaje = $"Error al eliminar unidadmedicion: {ex.Message}";
         }
+    }
+
+    private class unidadmedicionModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string descripcion { get; set; } = string.Empty;
     }
 }
