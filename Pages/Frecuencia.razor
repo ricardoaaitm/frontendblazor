@@ -1,22 +1,21 @@
-@page "/unidadmedicion"
+@page "/frecuencia"
 @using System.Collections.Generic
 @using Services
+@using FrontBlazor.Services
 @inject ServicioEntidad servicioEntidad
 @inject NavigationManager navegacionManager
 @inject IJSRuntime jsRuntime
-@using FrontBlazor.Services
 
+<PageTitle>Lista de frecuencias</PageTitle>
 
-<PageTitle>Lista de unidadmedicions</PageTitle>
-
-<h1>unidadmedicion</h1>
+<h1>frecuencia</h1>
 
 @if (editando || creando)
 {
-    <EditForm Model="@unidadmedicionActual" OnValidSubmit="Guardarunidadmedicion">
+    <EditForm Model="@frecuenciaActual" OnValidSubmit="Guardarfrecuencia">
         <div class="mb-3">
-            <label for="descripcion">descripcion:</label>
-            <input id="descripcion" class="form-control" @bind-value="unidadmedicionActual.descripcion" required />
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" class="form-control" @bind-value="frecuenciaActual.Nombre" required />
         </div>
         <button type="submit" class="btn btn-success">Guardar</button>
         <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
@@ -25,16 +24,16 @@
 else
 {
     <div class="mb-3">
-        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear unidadmedicion</button>
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear frecuencia</button>
     </div>
 
     @if (cargando)
     {
         <p><em>Cargando...</em></p>
     }
-    else if (unidadmedicion == null || unidadmedicion.Count == 0)
+    else if (frecuencia == null || frecuencia.Count == 0)
     {
-        <p>No hay unidadmedicions disponibles.</p>
+        <p>No hay frecuencias disponibles.</p>
     }
     else
     {
@@ -43,19 +42,19 @@ else
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>descripcion</th>
+                        <th>Nombre</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var unidadmedicionItem in unidadmedicion)
+                    @foreach (var frecuenciaItem in frecuencia)
                     {
                         <tr>
-                            <td>@ObtenerValor(unidadmedicionItem, "id")</td>
-                            <td>@ObtenerValor(unidadmedicionItem, "descripcion")</td>
+                            <td>@ObtenerValor(frecuenciaItem, "id")</td>
+                            <td>@ObtenerValor(frecuenciaItem, "nombre")</td>
                             <td>
-                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(unidadmedicionItem)">Editar</button>
-                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(unidadmedicionItem)">Eliminar</button>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(frecuenciaItem)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(frecuenciaItem)">Eliminar</button>
                             </td>
                         </tr>
                     }
@@ -73,23 +72,23 @@ else
 }
 
 @code {
-    private List<Dictionary<string, object>> unidadmedicion = new List<Dictionary<string, object>>();
+    private List<Dictionary<string, object>> frecuencia = new List<Dictionary<string, object>>();
     private bool cargando = true;
     private string? errorMensaje = null;
     private bool creando = false;
     private bool editando = false;
 
-    private unidadmedicionModel unidadmedicionActual = new unidadmedicionModel();
+    private frecuenciaModel frecuenciaActual = new frecuenciaModel();
 
     private const string PROYECTO = "proyecto";
-    private const string TABLA = "unidadmedicion";
+    private const string TABLA = "frecuencia";
 
     protected override async Task OnInitializedAsync()
     {
-        await Cargarunidadmedicion();
+        await Cargarfrecuencia();
     }
 
-    private async Task Cargarunidadmedicion()
+    private async Task Cargarfrecuencia()
     {
         cargando = true;
         errorMensaje = null;
@@ -97,12 +96,12 @@ else
         try
         {
             var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
-            unidadmedicion = resultado ?? new List<Dictionary<string, object>>();
+            frecuencia = resultado ?? new List<Dictionary<string, object>>();
         }
         catch (Exception ex)
         {
-            errorMensaje = $"Error al cargar unidadmedicion: {ex.Message}";
-            unidadmedicion = new List<Dictionary<string, object>>();
+            errorMensaje = $"Error al cargar frecuencia: {ex.Message}";
+            frecuencia = new List<Dictionary<string, object>>();
         }
         finally
         {
@@ -123,17 +122,17 @@ else
     {
         creando = true;
         editando = false;
-        unidadmedicionActual = new unidadmedicionModel();
+        frecuenciaActual = new frecuenciaModel();
     }
 
-    private void IniciarEdicion(Dictionary<string, object> unidadmedicionAEditar)
+    private void IniciarEdicion(Dictionary<string, object> frecuenciaAEditar)
     {
-        if (unidadmedicionAEditar.TryGetValue("id", out var idObj) && unidadmedicionAEditar.TryGetValue("descripcion", out var descripcionObj))
+        if (frecuenciaAEditar.TryGetValue("id", out var idObj) && frecuenciaAEditar.TryGetValue("nombre", out var nombreObj))
         {
-            unidadmedicionActual = new unidadmedicionModel
+            frecuenciaActual = new frecuenciaModel
             {
                 Id = idObj?.ToString() ?? string.Empty,
-                descripcion = descripcionObj?.ToString() ?? string.Empty
+                Nombre = nombreObj?.ToString() ?? string.Empty
             };
 
             editando = true;
@@ -141,11 +140,11 @@ else
         }
         else
         {
-            errorMensaje = "Error: No se pudo cargar la información de la unidadmedicion.";
+            errorMensaje = "Error: No se pudo cargar la información de la frecuencia.";
         }
     }
 
-    private async Task Guardarunidadmedicion()
+    private async Task Guardarfrecuencia()
     {
         try
         {
@@ -153,24 +152,24 @@ else
             {
                 await servicioEntidad.CrearAsync(PROYECTO, TABLA, new Dictionary<string, object>
                 {
-                    { "descripcion", unidadmedicionActual.descripcion }
+                    { "nombre", frecuenciaActual.Nombre }
                 });
             }
             else if (editando)
             {
-                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", unidadmedicionActual.Id, new Dictionary<string, object>
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", frecuenciaActual.Id, new Dictionary<string, object>
                 {
-                    { "descripcion", unidadmedicionActual.descripcion }
+                    { "nombre", frecuenciaActual.Nombre }
                 });
             }
 
             creando = false;
             editando = false;
-            await Cargarunidadmedicion();
+            await Cargarfrecuencia();
         }
         catch (Exception ex)
         {
-            errorMensaje = $"Error al guardar unidadmedicion: {ex.Message}";
+            errorMensaje = $"Error al guardar frecuencia: {ex.Message}";
         }
     }
 
@@ -180,11 +179,11 @@ else
         editando = false;
     }
 
-    private async Task ConfirmarEliminar(Dictionary<string, object> unidadmedicionAEliminar)
+    private async Task ConfirmarEliminar(Dictionary<string, object> frecuenciaAEliminar)
     {
-        if (!unidadmedicionAEliminar.TryGetValue("id", out var idObj) || idObj == null)
+        if (!frecuenciaAEliminar.TryGetValue("id", out var idObj) || idObj == null)
         {
-            errorMensaje = "Error: La unidadmedicion no tiene un ID válido.";
+            errorMensaje = "Error: La frecuencia no tiene un ID válido.";
             return;
         }
 
@@ -196,29 +195,29 @@ else
             return;
         }
 
-        bool confirmacion = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar la unidadmedicion con ID {id}?");
+        bool confirmacion = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar la frecuencia con ID {id}?");
         if (confirmacion)
         {
-            await Eliminarunidadmedicion(id);
+            await Eliminarfrecuencia(id);
         }
     }
 
-    private async Task Eliminarunidadmedicion(string id)
+    private async Task Eliminarfrecuencia(string id)
     {
         try
         {
             await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
-            await Cargarunidadmedicion();
+            await Cargarfrecuencia();
         }
         catch (Exception ex)
         {
-            errorMensaje = $"Error al eliminar unidadmedicion: {ex.Message}";
+            errorMensaje = $"Error al eliminar frecuencia: {ex.Message}";
         }
     }
 
-    private class unidadmedicionModel
+    private class frecuenciaModel
     {
         public string Id { get; set; } = string.Empty;
-        public string descripcion { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
     }
 }

@@ -1,0 +1,59 @@
+@page "/variablesporindicador"
+@inject HttpClient Http
+@using FrontBlazor.Services
+@inject ServicioEntidad servicioEntidad
+
+
+<h3>Variables por Indicador</h3>
+
+@if (variables == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Variable</th>
+                <th>Indicador</th>
+                <th>Dato</th>
+                <th>Fecha</th>
+                <th>Usuario</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var v in variables)
+            {
+                <tr>
+                    <td>@v.Id</td>
+                    <td>@v.Variable</td>
+                    <td>@v.Indicador</td>
+                    <td>@v.Dato</td>
+                    <td>@v.FechaDato.ToShortDateString()</td>
+                    <td>@v.Usuario</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<VariableIndicadorDto>? variables;
+
+    protected override async Task OnInitializedAsync()
+    {
+        variables = await Http.GetFromJsonAsync<List<VariableIndicadorDto>>("api/variablesporindicador");
+    }
+
+    public class VariableIndicadorDto
+    {
+        public int Id { get; set; }
+        public string Variable { get; set; } = string.Empty;
+        public string Indicador { get; set; } = string.Empty;
+        public double Dato { get; set; }
+        public DateTime FechaDato { get; set; }
+        public string Usuario { get; set; } = string.Empty;
+    }
+}
