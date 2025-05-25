@@ -1,0 +1,199 @@
+@page "/fuentesporindicador"
+@using System.Collections.Generic
+@using Services
+@using FrontBlazor.Services
+@inject ServicioEntidad servicioEntidad
+@inject NavigationManager navegacionManager
+@inject IJSRuntime jsRuntime
+
+<PageTitle>Fuentes por Indicador</PageTitle>
+
+<h1>Fuentes por Indicador</h1>
+
+@if (editando || creando)
+{
+    <EditForm Model="@fuenteActual" OnValidSubmit="GuardarFuente">
+        <div class="mb-3">
+            <label for="fkidfuente">ID Fuente:</label>
+            <InputText id="fkidfuente" class="form-control" @bind-Value="fuenteActual.FkidFuente" required />
+        </div>
+        <div class="mb-3">
+            <label for="fkidindicador">ID Indicador:</label>
+            <InputText id="fkidindicador" class="form-control" @bind-Value="fuenteActual.FkidIndicador" required />
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+    </EditForm>
+}
+else
+{
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear Fuente por Indicador</button>
+    </div>
+
+    @if (cargando)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (fuentesPorIndicador == null || fuentesPorIndicador.Count == 0)
+    {
+        <p>No hay registros disponibles.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID Fuente</th>
+                        <th>ID Indicador</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in fuentesPorIndicador)
+                    {
+                        <tr>
+                            <td>@ObtenerValor(item, "fkidfuente")</td>
+                            <td>@ObtenerValor(item, "fkidindicador")</td>
+                            <td>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(item)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(item)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@if (errorMensaje != null)
+{
+    <div class="alert alert-danger">
+        Error: @errorMensaje
+    </div>
+}
+
+@code {
+    private List<Dictionary<string, object>> fuentesPorIndicador = new();
+    private bool cargando = true;
+    private string? errorMensaje = null;
+    private bool creando = false;
+    private bool editando = false;
+
+    private FuenteIndicadorModel fuenteActual = new();
+
+    private const string PROYECTO = "proyecto";
+    private const string TABLA = "fuentesporindicador";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        cargando = true;
+        errorMensaje = null;
+
+        try
+        {
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            fuentesPorIndicador = resultado ?? new();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar: {ex.Message}";
+            fuentesPorIndicador = new();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        return diccionario.TryGetValue(clave, out var valor) ? valor?.ToString() ?? string.Empty : string.Empty;
+    }
+
+    private void IniciarCreacion()
+    {
+        creando = true;
+        editando = false;
+        fuenteActual = new();
+    }
+
+    private void IniciarEdicion(Dictionary<string, object> item)
+    {
+        fuenteActual = new FuenteIndicadorModel
+        {
+            FkidFuente = item["fkidfuente"].ToString() ?? string.Empty,
+            FkidIndicador = item["fkidindicador"].ToString() ?? string.Empty
+        };
+        editando = true;
+        creando = false;
+    }
+
+    private async Task GuardarFuente()
+    {
+        try
+        {
+            var entidad = new Dictionary<string, object>
+            {
+                { "fkidfuente", fuenteActual.FkidFuente },
+                { "fkidindicador", fuenteActual.FkidIndicador }
+            };
+
+            if (creando)
+                await servicioEntidad.CrearAsync(PROYECTO, TABLA, entidad);
+            else if (editando)
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "fkidindicador", fuenteActual.FkidIndicador, entidad);
+
+            creando = editando = false;
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al guardar: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        creando = false;
+        editando = false;
+    }
+
+    private async Task ConfirmarEliminar(Dictionary<string, object> item)
+    {
+        if (!item.TryGetValue("fkidindicador", out var idObj)) return;
+
+        var id = idObj?.ToString() ?? string.Empty;
+        if (string.IsNullOrEmpty(id)) return;
+
+        var confirmado = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Eliminar relación con indicador {id}?");
+        if (confirmado)
+            await Eliminar(id);
+    }
+
+    private async Task Eliminar(string id)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "fkidindicador", id);
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al eliminar: {ex.Message}";
+        }
+    }
+
+    private class FuenteIndicadorModel
+    {
+        public string FkidFuente { get; set; } = string.Empty;
+        public string FkidIndicador { get; set; } = string.Empty;
+    }
+}

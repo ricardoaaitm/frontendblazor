@@ -1,0 +1,223 @@
+@page "/subseccion"
+@using System.Collections.Generic
+@using Services
+@using FrontBlazor.Services
+@inject ServicioEntidad servicioEntidad
+@inject NavigationManager navegacionManager
+@inject IJSRuntime jsRuntime
+
+<PageTitle>Lista de subseccions</PageTitle>
+
+<h1>subseccion</h1>
+
+@if (editando || creando)
+{
+    <EditForm Model="@subseccionActual" OnValidSubmit="Guardarsubseccion">
+        <div class="mb-3">
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" class="form-control" @bind-value="subseccionActual.Nombre" required />
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+    </EditForm>
+}
+else
+{
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear subseccion</button>
+    </div>
+
+    @if (cargando)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (subseccion == null || subseccion.Count == 0)
+    {
+        <p>No hay subseccions disponibles.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var subseccionItem in subseccion)
+                    {
+                        <tr>
+                            <td>@ObtenerValor(subseccionItem, "id")</td>
+                            <td>@ObtenerValor(subseccionItem, "nombre")</td>
+                            <td>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(subseccionItem)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(subseccionItem)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@if (errorMensaje != null)
+{
+    <div class="alert alert-danger">
+        Error: @errorMensaje
+    </div>
+}
+
+@code {
+    private List<Dictionary<string, object>> subseccion = new List<Dictionary<string, object>>();
+    private bool cargando = true;
+    private string? errorMensaje = null;
+    private bool creando = false;
+    private bool editando = false;
+
+    private subseccionModel subseccionActual = new subseccionModel();
+
+    private const string PROYECTO = "proyecto";
+    private const string TABLA = "subseccion";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargarsubseccion();
+    }
+
+    private async Task Cargarsubseccion()
+    {
+        cargando = true;
+        errorMensaje = null;
+
+        try
+        {
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            subseccion = resultado ?? new List<Dictionary<string, object>>();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar subseccion: {ex.Message}";
+            subseccion = new List<Dictionary<string, object>>();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        if (diccionario != null && diccionario.TryGetValue(clave, out var valor))
+        {
+            return valor?.ToString() ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    private void IniciarCreacion()
+    {
+        creando = true;
+        editando = false;
+        subseccionActual = new subseccionModel();
+    }
+
+    private void IniciarEdicion(Dictionary<string, object> subseccionAEditar)
+    {
+        if (subseccionAEditar.TryGetValue("id", out var idObj) && subseccionAEditar.TryGetValue("nombre", out var nombreObj))
+        {
+            subseccionActual = new subseccionModel
+            {
+                Id = idObj?.ToString() ?? string.Empty,
+                Nombre = nombreObj?.ToString() ?? string.Empty
+            };
+
+            editando = true;
+            creando = false;
+        }
+        else
+        {
+            errorMensaje = "Error: No se pudo cargar la información de la subseccion.";
+        }
+    }
+
+    private async Task Guardarsubseccion()
+    {
+        try
+        {
+            if (creando)
+            {
+                await servicioEntidad.CrearAsync(PROYECTO, TABLA, new Dictionary<string, object>
+                {
+                    { "nombre", subseccionActual.Nombre }
+                });
+            }
+            else if (editando)
+            {
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", subseccionActual.Id, new Dictionary<string, object>
+                {
+                    { "nombre", subseccionActual.Nombre }
+                });
+            }
+
+            creando = false;
+            editando = false;
+            await Cargarsubseccion();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al guardar subseccion: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        creando = false;
+        editando = false;
+    }
+
+    private async Task ConfirmarEliminar(Dictionary<string, object> subseccionAEliminar)
+    {
+        if (!subseccionAEliminar.TryGetValue("id", out var idObj) || idObj == null)
+        {
+            errorMensaje = "Error: La subseccion no tiene un ID válido.";
+            return;
+        }
+
+        string id = idObj.ToString()?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(id))
+        {
+            errorMensaje = "Error: ID inválido.";
+            return;
+        }
+
+        bool confirmacion = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar la subseccion con ID {id}?");
+        if (confirmacion)
+        {
+            await Eliminarsubseccion(id);
+        }
+    }
+
+    private async Task Eliminarsubseccion(string id)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
+            await Cargarsubseccion();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al eliminar subseccion: {ex.Message}";
+        }
+    }
+
+    private class subseccionModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+    }
+}

@@ -5,7 +5,6 @@
 @using FrontBlazor.Services
 @inject ServicioEntidad servicioEntidad
 
-
 <h3>Indicadores</h3>
 
 @if (editando || creando)
@@ -38,97 +37,86 @@
             <label>Meta:</label>
             <InputText class="form-control" @bind-Value="indicador.Meta" />
         </div>
-        <!-- inicio de Agregar aquí dropdowns para FKs más adelante -->
-<div class="mb-3">
-    <label>Tipo de Indicador:</label>
-    <InputSelect class="form-control" @bind-Value="indicador.FkidTipoIndicador">
-        <option value="">-- Seleccionar --</option>
-        @foreach (var item in tiposIndicador)
-        {
-            <option value="@item.Id">@item.Nombre</option>
-        }
-    </InputSelect>
-</div>
-
-<div class="mb-3">
-    <label>Unidad de Medición:</label>
-    <InputSelect class="form-control" @bind-Value="indicador.FkidUnidadMedicion">
-        <option value="">-- Seleccionar --</option>
-        @foreach (var item in unidadesMedicion)
-        {
-            <option value="@item.Id">@item.Nombre</option>
-        }
-    </InputSelect>
-</div>
-
-<div class="mb-3">
-    <label>Sentido:</label>
-    <InputSelect class="form-control" @bind-Value="indicador.FkidSentido">
-        <option value="">-- Seleccionar --</option>
-        @foreach (var item in sentidos)
-        {
-            <option value="@item.Id">@item.Nombre</option>
-        }
-    </InputSelect>
-</div>
-
-<div class="mb-3">
-    <label>Frecuencia:</label>
-    <InputSelect class="form-control" @bind-Value="indicador.FkidFrecuencia">
-        <option value="">-- Seleccionar --</option>
-        @foreach (var item in frecuencias)
-        {
-            <option value="@item.Id">@item.Nombre</option>
-        }
-    </InputSelect>
-</div>
-
-<div class="mb-3">
-    <label>Artículo:</label>
-    <InputSelect class="form-control" @bind-Value="indicador.FkidArticulo" @onchange="OnArticuloChanged">
-        <option value="">-- Seleccionar --</option>
-        @foreach (var item in articulos)
-        {
-            <option value="@item.Id">@item.Nombre</option>
-        }
-    </InputSelect>
-</div>
-
-<div class="mb-3">
-    <label>Literal:</label>
-    <InputSelect class="form-control" @bind-Value="indicador.Fkidliteral" @onchange="OnLiteralChanged">
-        <option value="">-- Seleccionar --</option>
-        @foreach (var item in literales)
-        {
-            <option value="@item.Id">@item.Nombre</option>
-        }
-    </InputSelect>
-</div>
-
-<div class="mb-3">
-    <label>Numeral:</label>
-    <InputSelect class="form-control" @bind-Value="indicador.FkidNumeral" @onchange="OnNumeralChanged">
-        <option value="">-- Seleccionar --</option>
-        @foreach (var item in numerales)
-        {
-            <option value="@item.Id">@item.Nombre</option>
-        }
-    </InputSelect>
-</div>
-
-<div class="mb-3">
-    <label>Parágrafo:</label>
-    <InputSelect class="form-control" @bind-Value="indicador.FkidParagrafo">
-        <option value="">-- Seleccionar --</option>
-        @foreach (var item in paragrafos)
-        {
-            <option value="@item.Id">@item.Nombre</option>
-        }
-    </InputSelect>
-</div>
-
-
-        <!-- Fin de Agregar aquí dropdowns para FKs más adelante -->
+        <div class="mb-3">
+            <label>Tipo de Indicador:</label>
+            <InputSelect class="form-control" @bind-Value="indicador.FkidTipoIndicador">
+                <option value="">-- Seleccionar --</option>
+                @foreach (var item in tiposIndicador)
+                {
+                    <option value="@item.Id">@item.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="mb-3">
+            <label>Unidad de Medición:</label>
+            <InputSelect class="form-control" @bind-Value="indicador.FkidUnidadMedicion">
+                <option value="">-- Seleccionar --</option>
+                @foreach (var item in unidadesMedicion)
+                {
+                    <option value="@item.Id">@item.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="mb-3">
+            <label>Sentido:</label>
+            <InputSelect class="form-control" @bind-Value="indicador.FkidSentido">
+                <option value="">-- Seleccionar --</option>
+                @foreach (var item in sentidos)
+                {
+                    <option value="@item.Id">@item.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="mb-3">
+            <label>Frecuencia:</label>
+            <InputSelect class="form-control" @bind-Value="indicador.FkidFrecuencia">
+                <option value="">-- Seleccionar --</option>
+                @foreach (var item in frecuencias)
+                {
+                    <option value="@item.Id">@item.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="mb-3">
+            <label>Artículo:</label>
+            <InputSelect class="form-control" @bind-Value="indicador.FkidArticulo">
+                <option value="">-- Seleccionar --</option>
+                @foreach (var item in articulos)
+                {
+                    <option value="@item.Id">@item.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="mb-3">
+            <label>Literal:</label>
+            <InputSelect class="form-control" @bind-Value="indicador.Fkidliteral">
+                <option value="">-- Seleccionar --</option>
+                @foreach (var item in literales)
+                {
+                    <option value="@item.Id">@item.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="mb-3">
+            <label>Numeral:</label>
+            <InputSelect class="form-control" @bind-Value="indicador.FkidNumeral">
+                <option value="">-- Seleccionar --</option>
+                @foreach (var item in numerales)
+                {
+                    <option value="@item.Id">@item.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="mb-3">
+            <label>Parágrafo:</label>
+            <InputSelect class="form-control" @bind-Value="indicador.FkidParagrafo">
+                <option value="">-- Seleccionar --</option>
+                @foreach (var item in paragrafos)
+                {
+                    <option value="@item.Id">@item.Nombre</option>
+                }
+            </InputSelect>
+        </div>
 
         <button class="btn btn-success" type="submit">Guardar</button>
         <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
@@ -137,6 +125,11 @@
 else
 {
     <button class="btn btn-primary mb-3" @onclick="Crear">Crear indicador</button>
+
+    @if (!string.IsNullOrEmpty(errorMensaje))
+    {
+        <div class="alert alert-danger">@errorMensaje</div>
+    }
 
     @if (indicadores == null)
     {
@@ -147,34 +140,22 @@ else
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>id</th>
-                    <th>codigo</th>
-                    <th>nombre</th>
-                    <th>objetivo</th>
-                    <th>alcance</th>
-                    <th>formula</th>
-                    <th>fkidtipoindicador</th>
-                    <th>fkidunidadmedicion</th>
-                    <th>meta</th>
-                    <th>fkidsentido</th>
-                    <th>fkidfrecuencia</th>
-                    <th>fkidarticulo</th>
-                    <th>fkidliteral</th>
-                    <th>fkidnumeral</th>
-                    <th>fkidparagrafo</th>
-                    <th>Acciones</th>
-
-                    <!--INICIO nuevos campos agregados
                     <th>ID</th>
                     <th>Código</th>
                     <th>Nombre</th>
-                    <th>Acciones</th>
                     <th>Objetivo</th>
                     <th>Alcance</th>
-                    <th>Meta</th>
                     <th>Fórmula</th>
+                    <th>Meta</th>
                     <th>Tipo</th>
-                    FIN -->
+                    <th>Unidad</th>
+                    <th>Sentido</th>
+                    <th>Frecuencia</th>
+                    <th>Artículo</th>
+                    <th>Literal</th>
+                    <th>Numeral</th>
+                    <th>Parágrafo</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -187,17 +168,15 @@ else
                         <td>@item.Objetivo</td>
                         <td>@item.Alcance</td>
                         <td>@item.Formula</td>
+                        <td>@item.Meta</td>
                         <td>@item.FkidTipoIndicador</td>
                         <td>@item.FkidUnidadMedicion</td>
-                        <td>@item.Meta</td>
                         <td>@item.FkidSentido</td>
                         <td>@item.FkidFrecuencia</td>
                         <td>@item.FkidArticulo</td>
                         <td>@item.Fkidliteral</td>
                         <td>@item.FkidNumeral</td>
                         <td>@item.FkidParagrafo</td>
-                        
-                         
                         <td>
                             <button class="btn btn-warning btn-sm" @onclick="() => Editar(item)">Editar</button>
                             <button class="btn btn-danger btn-sm" @onclick="() => ConfirmarEliminar(item.Id)">Eliminar</button>
@@ -209,42 +188,21 @@ else
     }
 }
 
-
-
 @code {
-  
- //INICIO LINEAS INSERTADAS 
-public class EntidadGenerica
-{
-    public string Id { get; set; } = string.Empty; // <-- Antes era int, ahora es string para evitar error de conversión
-    public string Nombre { get; set; } = string.Empty;
-}
+    private List<EntidadGenerica> tiposIndicador = new();
+    private List<EntidadGenerica> unidadesMedicion = new();
+    private List<EntidadGenerica> sentidos = new();
+    private List<EntidadGenerica> frecuencias = new();
+    private List<EntidadGenerica> articulos = new();
+    private List<EntidadGenerica> literales = new();
+    private List<EntidadGenerica> numerales = new();
+    private List<EntidadGenerica> paragrafos = new();
 
-
-// Datos originales sin filtrar (los que vienen de la API completa)
-private List<EntidadGenerica> todosArticulos = new();
-private List<EntidadGenerica> todosLiterales = new();
-private List<EntidadGenerica> todosNumerales = new();
-private List<EntidadGenerica> todosParagrafos = new();
-
-// Listas filtradas por cascada (las que se muestran en los dropdowns)
-private List<EntidadGenerica> articulos = new();
-private List<EntidadGenerica> literales = new();
-private List<EntidadGenerica> numerales = new();
-private List<EntidadGenerica> paragrafos = new();
-
-// Listas planas (no dependientes) para otras FKs
-private List<EntidadGenerica> tiposIndicador = new();
-private List<EntidadGenerica> unidadesMedicion = new();
-private List<EntidadGenerica> sentidos = new();
-private List<EntidadGenerica> frecuencias = new();
-
-// Tu modelo principal
-private List<IndicadorDto>? indicadores;
-private IndicadorDto indicador = new();
-private bool creando = false;
-private bool editando = false;
-
+    private List<IndicadorDto>? indicadores;
+    private IndicadorDto indicador = new();
+    private bool creando = false;
+    private bool editando = false;
+    private string errorMensaje = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -252,27 +210,29 @@ private bool editando = false;
         await CargarIndicadores();
     }
 
-    private async Task CargarIndicadores()
+    private async Task CargarListas()
     {
-        indicadores = await Http.GetFromJsonAsync<List<IndicadorDto>>("api/indicador");
+        try { tiposIndicador = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/tipoindicador") ?? new(); } catch { tiposIndicador = new(); }
+        try { unidadesMedicion = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/unidadmedicion") ?? new(); } catch { unidadesMedicion = new(); }
+        try { sentidos = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/sentido") ?? new(); } catch { sentidos = new(); }
+        try { frecuencias = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/frecuencia") ?? new(); } catch { frecuencias = new(); }
+        try { articulos = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/articulo") ?? new(); } catch { articulos = new(); }
+        try { literales = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/literal") ?? new(); } catch { literales = new(); }
+        try { numerales = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/numeral") ?? new(); } catch { numerales = new(); }
+        try { paragrafos = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/paragrafo") ?? new(); } catch { paragrafos = new(); }
     }
 
-private async Task CargarListas()
-{
-    tiposIndicador = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/tipoindicador") ?? new();
-    unidadesMedicion = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/unidadmedicion") ?? new();
-    sentidos = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/sentido") ?? new();
-    frecuencias = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/frecuencia") ?? new();
-
-    todosArticulos = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/articulo") ?? new();
-    todosLiterales = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/literal") ?? new();
-    todosNumerales = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/numeral") ?? new();
-    todosParagrafos = await Http.GetFromJsonAsync<List<EntidadGenerica>>("proyecto/paragrafo") ?? new();
-
-    articulos = todosArticulos;
-}
-
-
+    private async Task CargarIndicadores()
+    {
+        try
+        {
+            indicadores = await Http.GetFromJsonAsync<List<IndicadorDto>>("api/indicador");
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = "Error al cargar indicadores: " + ex.Message;
+        }
+    }
 
     private void Crear()
     {
@@ -285,42 +245,23 @@ private async Task CargarListas()
     {
         creando = false;
         editando = true;
-        indicador = new IndicadorDto
-        {
-            Id = item.Id,
-            Codigo = item.Codigo,
-            Nombre = item.Nombre,
-            Objetivo = item.Objetivo,
-            Alcance = item.Alcance,
-            Formula = item.Formula,
-            Meta = item.Meta
-        };
+        indicador = item;
     }
 
     private async Task GuardarIndicador()
     {
+        HttpResponseMessage resp;
+
         if (creando)
-        {
-            var resp = await Http.PostAsJsonAsync("api/indicador", indicador);
-            if (resp.IsSuccessStatusCode)
-                await js.InvokeVoidAsync("alert", "Indicador creado");
-        }
-        else if (editando && indicador.Id.HasValue)
-        {
-            var resp = await Http.PutAsJsonAsync($"api/indicador/{indicador.Id}", indicador);
-            if (resp.IsSuccessStatusCode)
-                await js.InvokeVoidAsync("alert", "Indicador actualizado");
-        }
+            resp = await Http.PostAsJsonAsync("api/indicador", indicador);
+        else
+            resp = await Http.PutAsJsonAsync($"api/indicador/{indicador.Id}", indicador);
 
-        creando = false;
-        editando = false;
+        if (resp.IsSuccessStatusCode)
+            await js.InvokeVoidAsync("alert", "Indicador guardado correctamente");
+
+        creando = editando = false;
         await CargarIndicadores();
-    }
-
-    private void Cancelar()
-    {
-        creando = false;
-        editando = false;
     }
 
     private async Task ConfirmarEliminar(int? id)
@@ -335,70 +276,34 @@ private async Task CargarListas()
         }
     }
 
-private void OnArticuloChanged(ChangeEventArgs e)
-{
-    var selected = e.Value?.ToString();
-    indicador.FkidArticulo = selected;
+    private void Cancelar()
+    {
+        creando = false;
+        editando = false;
+    }
 
-    literales = todosLiterales
-        .Where(x => x.Id.StartsWith(selected ?? ""))
-        .ToList();
+    public class EntidadGenerica
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+    }
 
-    numerales = new(); // Limpiar dependientes
-    paragrafos = new();
-    indicador.Fkidliteral = null;
-    indicador.FkidNumeral = null;
-    indicador.FkidParagrafo = null;
-}
-
-private void OnLiteralChanged(ChangeEventArgs e)
-{
-    var selected = e.Value?.ToString();
-    indicador.Fkidliteral = selected;
-
-    numerales = todosNumerales
-        .Where(x => x.Id.StartsWith($"{indicador.FkidArticulo ?? ""}.{selected ?? ""}"))
-        .ToList();
-
-    paragrafos = new();
-    indicador.FkidNumeral = null;
-    indicador.FkidParagrafo = null;
-}
-
-private void OnNumeralChanged(ChangeEventArgs e)
-{
-    var selected = e.Value?.ToString();
-    indicador.FkidNumeral = selected;
-
-    paragrafos = todosParagrafos
-        .Where(x => x.Id.StartsWith($"{indicador.FkidArticulo ?? ""}.{indicador.Fkidliteral ?? ""}.{selected ?? ""}"))
-        .ToList();
-
-    indicador.FkidParagrafo = null;
-}
-
-private void OnParagrafoChanged(ChangeEventArgs e)
-{
-    indicador.FkidParagrafo = e.Value?.ToString();
-}
-
-public class IndicadorDto
-{
-    public int? Id { get; set; }
-    public string Codigo { get; set; } = string.Empty;
-    public string Nombre { get; set; } = string.Empty;
-    public string Objetivo { get; set; } = string.Empty;
-    public string Alcance { get; set; } = string.Empty;
-    public string Formula { get; set; } = string.Empty;
-    public string Meta { get; set; } = string.Empty;
-    public int FkidTipoIndicador { get; set; }
-    public int FkidUnidadMedicion { get; set; }
-    public int FkidSentido { get; set; }
-    public int FkidFrecuencia { get; set; }
-    public string? FkidArticulo { get; set; }
-    public string? Fkidliteral { get; set; }
-    public string? FkidNumeral { get; set; }
-    public string? FkidParagrafo { get; set; }
-}
-
+    public class IndicadorDto
+    {
+        public int? Id { get; set; }
+        public string Codigo { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+        public string Objetivo { get; set; } = string.Empty;
+        public string Alcance { get; set; } = string.Empty;
+        public string Formula { get; set; } = string.Empty;
+        public string Meta { get; set; } = string.Empty;
+        public int FkidTipoIndicador { get; set; }
+        public int FkidUnidadMedicion { get; set; }
+        public int FkidSentido { get; set; }
+        public int FkidFrecuencia { get; set; }
+        public string? FkidArticulo { get; set; }
+        public string? Fkidliteral { get; set; }
+        public string? FkidNumeral { get; set; }
+        public string? FkidParagrafo { get; set; }
+    }
 }

@@ -1,0 +1,223 @@
+@page "/literal"
+@using System.Collections.Generic
+@using Services
+@using FrontBlazor.Services
+@inject ServicioEntidad servicioEntidad
+@inject NavigationManager navegacionManager
+@inject IJSRuntime jsRuntime
+
+<PageTitle>Lista de literals</PageTitle>
+
+<h1>literal</h1>
+
+@if (editando || creando)
+{
+    <EditForm Model="@literalActual" OnValidSubmit="Guardarliteral">
+        <div class="mb-3">
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" class="form-control" @bind-value="literalActual.Nombre" required />
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+    </EditForm>
+}
+else
+{
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear literal</button>
+    </div>
+
+    @if (cargando)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (literal == null || literal.Count == 0)
+    {
+        <p>No hay literals disponibles.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var literalItem in literal)
+                    {
+                        <tr>
+                            <td>@ObtenerValor(literalItem, "id")</td>
+                            <td>@ObtenerValor(literalItem, "nombre")</td>
+                            <td>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(literalItem)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(literalItem)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@if (errorMensaje != null)
+{
+    <div class="alert alert-danger">
+        Error: @errorMensaje
+    </div>
+}
+
+@code {
+    private List<Dictionary<string, object>> literal = new List<Dictionary<string, object>>();
+    private bool cargando = true;
+    private string? errorMensaje = null;
+    private bool creando = false;
+    private bool editando = false;
+
+    private literalModel literalActual = new literalModel();
+
+    private const string PROYECTO = "proyecto";
+    private const string TABLA = "literal";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargarliteral();
+    }
+
+    private async Task Cargarliteral()
+    {
+        cargando = true;
+        errorMensaje = null;
+
+        try
+        {
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            literal = resultado ?? new List<Dictionary<string, object>>();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar literal: {ex.Message}";
+            literal = new List<Dictionary<string, object>>();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        if (diccionario != null && diccionario.TryGetValue(clave, out var valor))
+        {
+            return valor?.ToString() ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    private void IniciarCreacion()
+    {
+        creando = true;
+        editando = false;
+        literalActual = new literalModel();
+    }
+
+    private void IniciarEdicion(Dictionary<string, object> literalAEditar)
+    {
+        if (literalAEditar.TryGetValue("id", out var idObj) && literalAEditar.TryGetValue("nombre", out var nombreObj))
+        {
+            literalActual = new literalModel
+            {
+                Id = idObj?.ToString() ?? string.Empty,
+                Nombre = nombreObj?.ToString() ?? string.Empty
+            };
+
+            editando = true;
+            creando = false;
+        }
+        else
+        {
+            errorMensaje = "Error: No se pudo cargar la información de la literal.";
+        }
+    }
+
+    private async Task Guardarliteral()
+    {
+        try
+        {
+            if (creando)
+            {
+                await servicioEntidad.CrearAsync(PROYECTO, TABLA, new Dictionary<string, object>
+                {
+                    { "nombre", literalActual.Nombre }
+                });
+            }
+            else if (editando)
+            {
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", literalActual.Id, new Dictionary<string, object>
+                {
+                    { "nombre", literalActual.Nombre }
+                });
+            }
+
+            creando = false;
+            editando = false;
+            await Cargarliteral();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al guardar literal: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        creando = false;
+        editando = false;
+    }
+
+    private async Task ConfirmarEliminar(Dictionary<string, object> literalAEliminar)
+    {
+        if (!literalAEliminar.TryGetValue("id", out var idObj) || idObj == null)
+        {
+            errorMensaje = "Error: La literal no tiene un ID válido.";
+            return;
+        }
+
+        string id = idObj.ToString()?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(id))
+        {
+            errorMensaje = "Error: ID inválido.";
+            return;
+        }
+
+        bool confirmacion = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar la literal con ID {id}?");
+        if (confirmacion)
+        {
+            await Eliminarliteral(id);
+        }
+    }
+
+    private async Task Eliminarliteral(string id)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
+            await Cargarliteral();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al eliminar literal: {ex.Message}";
+        }
+    }
+
+    private class literalModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+    }
+}

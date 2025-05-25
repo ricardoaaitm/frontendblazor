@@ -8,6 +8,9 @@ using FrontBlazor.Services;                     // Contiene los servicios person
 // Este objeto se utiliza para configurar los servicios y componentes de la aplicación
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
+builder.Services.AddScoped<AuthService>();
+
+
 // Registra el componente App (definido en App.razor) como componente raíz
 // Lo asocia al elemento HTML con el id "app" en wwwroot/index.html
 builder.RootComponents.Add<App>("#app");
