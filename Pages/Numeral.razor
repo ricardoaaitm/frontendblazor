@@ -1,0 +1,202 @@
+@page "/numeral"
+@using System.Collections.Generic
+@using FrontBlazor.Services
+@inject ServicioEntidad servicioEntidad
+@inject IJSRuntime jsRuntime
+
+<PageTitle>Numerales</PageTitle>
+
+<h1>Numerales</h1>
+
+@if (editando || creando)
+{
+    <EditForm Model="@numeralActual" OnValidSubmit="GuardarNumeral">
+        <div class="mb-3">
+            <label for="nombre">Descripción:</label>
+            <InputText id="nombre" class="form-control" @bind-Value="numeralActual.nombre" required />
+        </div>
+        <div class="mb-3">
+            <label for="fkidliteral">ID Literal:</label>
+            <InputText id="fkidliteral" class="form-control" @bind-Value="numeralActual.FkidLiteral" required />
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+    </EditForm>
+}
+else
+{
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear Numeral</button>
+    </div>
+
+    @if (cargando)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (numerales == null || numerales.Count == 0)
+    {
+        <p>No hay numerales disponibles.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Descripción</th>
+                        <th>ID Literal</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in numerales)
+                    {
+                        <tr>
+                            <td>@ObtenerValor(item, "id")</td>
+                            <td>@ObtenerValor(item, "nombre")</td>
+                            <td>@ObtenerValor(item, "fkidliteral")</td>
+                            <td>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(item)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(item)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@if (errorMensaje != null)
+{
+    <div class="alert alert-danger">
+        Error: @errorMensaje
+    </div>
+}
+
+@code {
+    private List<Dictionary<string, object>> numerales = new();
+    private bool cargando = true;
+    private string? errorMensaje = null;
+    private bool creando = false;
+    private bool editando = false;
+
+    private NumeralModel numeralActual = new();
+
+    private const string PROYECTO = "proyecto";
+    private const string TABLA = "numeral";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarNumerales();
+    }
+
+    private async Task CargarNumerales()
+    {
+        cargando = true;
+        errorMensaje = null;
+
+        try
+        {
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            numerales = resultado ?? new();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar: {ex.Message}";
+            numerales = new();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        return diccionario.TryGetValue(clave, out var valor) ? valor?.ToString() ?? string.Empty : string.Empty;
+    }
+
+    private void IniciarCreacion()
+    {
+        creando = true;
+        editando = false;
+        numeralActual = new();
+    }
+
+    private void IniciarEdicion(Dictionary<string, object> item)
+    {
+        numeralActual = new NumeralModel
+        {
+            Id = item["id"]?.ToString() ?? string.Empty,
+            nombre = item["nombre"]?.ToString() ?? string.Empty,
+            FkidLiteral = item["fkidliteral"]?.ToString() ?? string.Empty
+        };
+
+        creando = false;
+        editando = true;
+    }
+
+    private async Task GuardarNumeral()
+    {
+        try
+        {
+            var entidad = new Dictionary<string, object>
+            {
+                { "nombre", numeralActual.nombre },
+                { "fkidliteral", numeralActual.FkidLiteral }
+            };
+
+            if (creando)
+                await servicioEntidad.CrearAsync(PROYECTO, TABLA, entidad);
+            else if (editando)
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", numeralActual.Id, entidad);
+
+            creando = editando = false;
+            await CargarNumerales();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al guardar: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        creando = false;
+        editando = false;
+    }
+
+    private async Task ConfirmarEliminar(Dictionary<string, object> item)
+    {
+        if (!item.TryGetValue("id", out var idObj)) return;
+
+        var id = idObj?.ToString() ?? string.Empty;
+        if (string.IsNullOrEmpty(id)) return;
+
+        var confirmado = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Eliminar numeral con ID {id}?");
+        if (confirmado)
+            await Eliminar(id);
+    }
+
+    private async Task Eliminar(string id)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
+            await CargarNumerales();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al eliminar: {ex.Message}";
+        }
+    }
+
+    private class NumeralModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string nombre { get; set; } = string.Empty;
+        public string FkidLiteral { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,223 @@
+@page "/paragrafo"
+@using System.Collections.Generic
+@using Services
+@using FrontBlazor.Services
+@inject ServicioEntidad servicioEntidad
+@inject NavigationManager navegacionManager
+@inject IJSRuntime jsRuntime
+
+<PageTitle>Lista de paragrafos</PageTitle>
+
+<h1>paragrafo</h1>
+
+@if (editando || creando)
+{
+    <EditForm Model="@paragrafoActual" OnValidSubmit="Guardarparagrafo">
+        <div class="mb-3">
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" class="form-control" @bind-value="paragrafoActual.Nombre" required />
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="button" class="btn btn-secondary" @onclick="CancelarEdicion">Cancelar</button>
+    </EditForm>
+}
+else
+{
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="IniciarCreacion">Crear paragrafo</button>
+    </div>
+
+    @if (cargando)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (paragrafo == null || paragrafo.Count == 0)
+    {
+        <p>No hay paragrafos disponibles.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var paragrafoItem in paragrafo)
+                    {
+                        <tr>
+                            <td>@ObtenerValor(paragrafoItem, "id")</td>
+                            <td>@ObtenerValor(paragrafoItem, "nombre")</td>
+                            <td>
+                                <button class="btn btn-warning" @onclick="() => IniciarEdicion(paragrafoItem)">Editar</button>
+                                <button class="btn btn-danger" @onclick="() => ConfirmarEliminar(paragrafoItem)">Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@if (errorMensaje != null)
+{
+    <div class="alert alert-danger">
+        Error: @errorMensaje
+    </div>
+}
+
+@code {
+    private List<Dictionary<string, object>> paragrafo = new List<Dictionary<string, object>>();
+    private bool cargando = true;
+    private string? errorMensaje = null;
+    private bool creando = false;
+    private bool editando = false;
+
+    private paragrafoModel paragrafoActual = new paragrafoModel();
+
+    private const string PROYECTO = "proyecto";
+    private const string TABLA = "paragrafo";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargarparagrafo();
+    }
+
+    private async Task Cargarparagrafo()
+    {
+        cargando = true;
+        errorMensaje = null;
+
+        try
+        {
+            var resultado = await servicioEntidad.ObtenerTodosAsync(PROYECTO, TABLA);
+            paragrafo = resultado ?? new List<Dictionary<string, object>>();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al cargar paragrafo: {ex.Message}";
+            paragrafo = new List<Dictionary<string, object>>();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private string ObtenerValor(Dictionary<string, object> diccionario, string clave)
+    {
+        if (diccionario != null && diccionario.TryGetValue(clave, out var valor))
+        {
+            return valor?.ToString() ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    private void IniciarCreacion()
+    {
+        creando = true;
+        editando = false;
+        paragrafoActual = new paragrafoModel();
+    }
+
+    private void IniciarEdicion(Dictionary<string, object> paragrafoAEditar)
+    {
+        if (paragrafoAEditar.TryGetValue("id", out var idObj) && paragrafoAEditar.TryGetValue("nombre", out var nombreObj))
+        {
+            paragrafoActual = new paragrafoModel
+            {
+                Id = idObj?.ToString() ?? string.Empty,
+                Nombre = nombreObj?.ToString() ?? string.Empty
+            };
+
+            editando = true;
+            creando = false;
+        }
+        else
+        {
+            errorMensaje = "Error: No se pudo cargar la información de la paragrafo.";
+        }
+    }
+
+    private async Task Guardarparagrafo()
+    {
+        try
+        {
+            if (creando)
+            {
+                await servicioEntidad.CrearAsync(PROYECTO, TABLA, new Dictionary<string, object>
+                {
+                    { "nombre", paragrafoActual.Nombre }
+                });
+            }
+            else if (editando)
+            {
+                await servicioEntidad.ActualizarAsync(PROYECTO, TABLA, "id", paragrafoActual.Id, new Dictionary<string, object>
+                {
+                    { "nombre", paragrafoActual.Nombre }
+                });
+            }
+
+            creando = false;
+            editando = false;
+            await Cargarparagrafo();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al guardar paragrafo: {ex.Message}";
+        }
+    }
+
+    private void CancelarEdicion()
+    {
+        creando = false;
+        editando = false;
+    }
+
+    private async Task ConfirmarEliminar(Dictionary<string, object> paragrafoAEliminar)
+    {
+        if (!paragrafoAEliminar.TryGetValue("id", out var idObj) || idObj == null)
+        {
+            errorMensaje = "Error: La paragrafo no tiene un ID válido.";
+            return;
+        }
+
+        string id = idObj.ToString()?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrEmpty(id))
+        {
+            errorMensaje = "Error: ID inválido.";
+            return;
+        }
+
+        bool confirmacion = await jsRuntime.InvokeAsync<bool>("confirm", $"¿Estás seguro de eliminar la paragrafo con ID {id}?");
+        if (confirmacion)
+        {
+            await Eliminarparagrafo(id);
+        }
+    }
+
+    private async Task Eliminarparagrafo(string id)
+    {
+        try
+        {
+            await servicioEntidad.EliminarAsync(PROYECTO, TABLA, "id", id);
+            await Cargarparagrafo();
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = $"Error al eliminar paragrafo: {ex.Message}";
+        }
+    }
+
+    private class paragrafoModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+    }
+}

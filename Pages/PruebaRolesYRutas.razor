@@ -1,0 +1,111 @@
+@page "/prueba-roles-rutas"   // Definir la ruta de la página como "/prueba-roles-rutas"
+@inject IJSRuntime JSRuntime  // Inyectar el servicio de JavaScript Runtime para interactuar con sessionStorage
+
+<div class="container mt-4">
+    <h3>Información del Usuario</h3>
+
+    <!-- Mostrar el email del usuario obtenido del sessionStorage -->
+    <div class="mb-3">
+        <strong>Email:</strong> @usuarioEmail
+    </div>
+
+    <h4>Roles:</h4>
+    <ul class="list-unstyled">
+        <!-- Mostrar cada rol almacenado -->
+        @foreach (var rol in roles)
+        {
+            <li>@rol</li>
+        }
+    </ul>
+
+    <h4>Rutas a las que tiene acceso:</h4>
+    <ul class="list-unstyled">
+        <!-- Mostrar cada ruta almacenada -->
+        @foreach (var ruta in rutas)
+        {
+            <li>@ruta</li>
+        }
+    </ul>
+</div>
+
+@code {
+    // Variable para almacenar el correo electrónico del usuario
+    private string usuarioEmail = "";
+
+    // Lista para almacenar los roles obtenidos del sessionStorage
+    private List<string> roles = new List<string>();
+
+    // Lista para almacenar las rutas obtenidas del sessionStorage
+    private List<string> rutas = new List<string>();
+
+    /// <summary>
+    /// Método que se ejecuta automáticamente cuando se inicializa el componente.
+    /// Carga el email, los roles y las rutas desde sessionStorage.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // ------------------------------------------------------
+            // 1. Obtener el email almacenado en sessionStorage
+            // ------------------------------------------------------
+            usuarioEmail = await JSRuntime.InvokeAsync<string>(
+                "sessionStorage.getItem", 
+                "usuarioEmail"
+            );
+
+            // Mostrar el email obtenido en la consola del navegador (para depuración)
+            Console.WriteLine($"Email obtenido: {usuarioEmail}");
+
+            // ------------------------------------------------------
+            // 2. Obtener los roles almacenados en sessionStorage
+            // ------------------------------------------------------
+            var scriptRoles = @"
+                Object.keys(sessionStorage)                    // Obtener todas las claves almacenadas
+                    .filter(key => key.startsWith('rol_'))     // Filtrar solo las claves que comienzan con 'rol_'
+                    .map(key => sessionStorage.getItem(key))   // Obtener el valor asociado a cada clave
+            ";
+
+            // Ejecutar el script JavaScript para obtener los roles
+            roles = await JSRuntime.InvokeAsync<List<string>>(
+                "eval", 
+                scriptRoles
+            );
+
+            // Mostrar los roles obtenidos en la consola del navegador
+            Console.WriteLine($"Roles obtenidos: {string.Join(", ", roles)}");
+
+            // ------------------------------------------------------
+            // 3. Obtener las rutas almacenadas en sessionStorage
+            // ------------------------------------------------------
+            var scriptRutas = @"
+                Object.keys(sessionStorage)                      // Obtener todas las claves almacenadas
+                    .filter(key => key.startsWith('ruta_'))       // Filtrar solo las claves que comienzan con 'ruta_'
+                    .map(key => sessionStorage.getItem(key))      // Obtener el valor asociado a cada clave
+            ";
+
+            // Ejecutar el script JavaScript para obtener las rutas
+            rutas = await JSRuntime.InvokeAsync<List<string>>(
+                "eval", 
+                scriptRutas
+            );
+
+            // Mostrar las rutas obtenidas en la consola del navegador
+            Console.WriteLine($"Rutas obtenidas: {string.Join(", ", rutas)}");
+
+            // ------------------------------------------------------
+            // 4. Forzar el refresco del componente para reflejar los datos en la interfaz
+            // ------------------------------------------------------
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Capturar cualquier error inesperado durante la carga
+            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+
+            // También registrar el error en la consola del navegador
+            await JSRuntime.InvokeVoidAsync("console.error", "Error:", ex);
+        }
+    }
+}
