@@ -1,0 +1,39 @@
+@page "/registro-cliente"
+@using System.ComponentModel.DataAnnotations
+
+<h3>Registro de Cliente</h3>
+
+<EditForm Model="@cliente" OnValidSubmit="GuardarCliente">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Nombre:</label>
+        <InputText @bind-Value="cliente.Nombre" />
+        <ValidationMessage For="@(() => cliente.Nombre)" />
+    </div>
+
+    <div>
+        <label>Correo:</label>
+        <InputText @bind-Value="cliente.Correo" />
+        <ValidationMessage For="@(() => cliente.Correo)" />
+    </div>
+
+    <div>
+        <label>Edad:</label>
+        <InputNumber @bind-Value="cliente.Edad" />
+        <ValidationMessage For="@(() => cliente.Edad)" />
+    </div>
+
+    <button type="submit">Guardar</button>
+</EditForm>
+
+@code {
+    Cliente cliente = new();
+    
+    void GuardarCliente()
+    {
+        // Aquí va tu lógica para guardar el cliente
+        Console.WriteLine($"Cliente registrado: {cliente.Nombre}");
+    }
+}
