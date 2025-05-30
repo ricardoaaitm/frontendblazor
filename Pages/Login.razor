@@ -16,11 +16,11 @@
           class="img-fluid" alt="Sample image">
       </div>
       
-      <!-- Formulario de login con Blazor -->
+      
       <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
         <EditForm Model="@modeloLogin" OnValidSubmit="ManejarLogin">
-          <DataAnnotationsValidator /> <!-- Agrega esto para activar las validaciones -->
-          <!-- Inicia el formulario de login usando EditForm -->
+          <DataAnnotationsValidator /> 
+
           
           <!-- Botones de inicio de sesión externos (por ejemplo, redes sociales) -->
           <div class="d-flex flex-row align-items-center justify-content-center justify-content-lg-start">
@@ -81,12 +81,10 @@
     private string mensajeAlerta = "";
     private string tipoAlerta = ""; // "success", "danger", etc.
 
-    // Crear el modelo de datos para almacenar el correo electrónico y la contraseña ingresados
+    // modelo de datos para almacenar el correo electrónico y la contraseña ingresados
     private ModeloLogin modeloLogin = new ModeloLogin();
 
-    /// <summary>
-    /// Manejar el proceso de login cuando el formulario se envía de manera válida.
-    /// </summary>
+    
     private async Task ManejarLogin()
     {
         try
@@ -94,10 +92,10 @@
             // Construir el diccionario con los datos necesarios para verificar usuario y contraseña
             var datosVerificar = new Dictionary<string, string>
             {
-                { "campoUsuario", "email" },                          // Indicar el nombre del campo de usuario en la base de datos
-                { "campoContrasena", "contrasena" },                  // Indicar el nombre del campo de contraseña en la base de datos
-                { "valorUsuario", modeloLogin.Correo },               // Capturar el valor del usuario ingresado en el formulario
-                { "valorContrasena", modeloLogin.Contrasena }         // Capturar el valor de la contraseña ingresada
+                { "campoUsuario", "email" },                          // nombre del campo de usuario en la base de datos
+                { "campoContrasena", "contrasena" },                  // nombre del campo de contraseña en la base de datos
+                { "valorUsuario", modeloLogin.Correo },               // valor del usuario ingresado en el formulario
+                { "valorContrasena", modeloLogin.Contrasena }         // valor de la contraseña ingresada
             };
 
             // Realizar una solicitud POST al backend para verificar si el usuario y la contraseña son correctos
