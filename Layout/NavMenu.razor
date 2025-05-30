@@ -1,5 +1,4 @@
-﻿
-<!-- Barra superior de navegación -->
+﻿<!-- Barra superior de navegación -->
 <div class="top-row ps-3 navbar navbar-dark">
     <!-- Contenedor del menú de navegación -->
     <div class="container-fluid">
@@ -20,7 +19,7 @@
     <nav class="nav flex-column">
         <!-- Enlace a la página principal (Home) -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="/home" Match="NavLinkMatch.All">
                 <!-- Icono de inicio -->
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
@@ -30,7 +29,7 @@
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/indicador">
-                <span class="bi bi-bar-chart-line-fill-nav-menu" aria-hidden="true"></span> Indicador
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Indicador
             </NavLink>
         </div>
 
@@ -40,7 +39,8 @@
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/variablesporindicador">
-                <span class="bi bi-list-task"></span> Variables por Indicador
+                <span class="bi bi-list-nested-nav-menu"></span>
+                <span class="d-none d-md-inline"> Variables por Indicador</span>
             </NavLink>
         </div>
 <!--------------------------------------------------->
@@ -48,7 +48,7 @@
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/frecuencia">
                 <!-- Icono para frecuencia -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> frecuencia
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Frecuencia
             </NavLink>
         </div>
 <!--------------------------------------------------->
@@ -65,7 +65,7 @@
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/fuentesporindicador">
                 <!-- Icono para fuentesporindicador -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> fuentesporindicador
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Fuentes Por Indicador
             </NavLink>
         </div>
 <!--------------------------------------------------->
@@ -84,53 +84,10 @@
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/seccion">
                 <!-- Icono para seccion -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> seccion
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Sección
             </NavLink>
         </div>
 <!--------------------------------------------------->
-<<<<<<< HEAD
-         <!-- Enlace a la página de subseccion -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/subseccion">
-                <!-- Icono para subseccion -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> subseccion
-            </NavLink>
-        </div>
-<!--------------------------------------------------->
-         <!-- Enlace a la página de articulo -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/articulo">
-                <!-- Icono para articulo -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> articulo
-            </NavLink>
-        </div>
-<!--------------------------------------------------->
-         <!-- Enlace a la página de literal -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/literal">
-                <!-- Icono para literal -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> literal
-            </NavLink>
-        </div>
-<!--------------------------------------------------->
-         <!-- Enlace a la página de paragrafo -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/paragrafo">
-                <!-- Icono para paragrafo -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> paragrafo
-            </NavLink>
-        </div>
-<!--------------------------------------------------->
-         <!-- Enlace a la página de numeral -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/numeral">
-                <!-- Icono para numeral -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> numeral
-            </NavLink>
-        </div>
-<!--------------------------------------------------->
-=======
->>>>>>> 68ef29c451327ce42ab56c4617831afa2bab5817
          <!-- Enlace a la página de Sentido -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/sentido">
@@ -143,7 +100,7 @@
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/actor">
                 <!-- Icono para actor -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> actor
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Actor
             </NavLink>
         </div>
 <!--------------------------------------------------->
@@ -152,7 +109,7 @@
             <!-- href="tipoactor": enlace a la página de contador -->
             <NavLink class="nav-link" href="tipoactor">
                 <!-- Icono para la opción tipoactor (símbolo de más en un cuadrado) -->
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> tipoactor
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Tipoactor
             </NavLink>
         </div>
 <!--------------------------------------------------->
@@ -160,7 +117,7 @@
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/rol">
                 <!-- Icono para rol -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> rol
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Rol
             </NavLink>
         </div>
 <!--------------------------------------------------->
@@ -177,7 +134,7 @@
             <!-- href="unidadmedicion": enlace a la página de contador -->
             <NavLink class="nav-link" href="unidadmedicion">
                 <!-- Icono para la opción unidadmedicion (símbolo de más en un cuadrado) -->
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> unidadmedicion
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Unidad Medición
             </NavLink>
         </div>
 

@@ -1,8 +1,23 @@
 ﻿@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime
+
+@code {
+    private bool mostrarMenu = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "usuarioEmail");
+        mostrarMenu = !string.IsNullOrEmpty(email);
+    }
+}
+
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    @if (mostrarMenu)
+    {
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+    }
 
     <main>
         <div class="top-row px-4">
