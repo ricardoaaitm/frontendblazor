@@ -19,6 +19,7 @@
       <!-- Formulario de login con Blazor -->
       <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
         <EditForm Model="@modeloLogin" OnValidSubmit="ManejarLogin">
+          <DataAnnotationsValidator /> <!-- Agrega esto para activar las validaciones -->
           <!-- Inicia el formulario de login usando EditForm -->
           
           <!-- Botones de inicio de sesión externos (por ejemplo, redes sociales) -->
@@ -44,7 +45,7 @@
           <div class="form-outline mb-4">
               <label class="form-label" for="form3Example3">Correo electronico</label>
             <InputText id="form3Example3" class="form-control form-control-lg" 
-                       @bind-Value="modeloLogin.Correo" placeholder="Digia tu correo" />
+                       @bind-Value="modeloLogin.Correo" placeholder="Digita tu correo" />
           
             <ValidationMessage For="@(() => modeloLogin.Correo)" />
           </div>
@@ -53,9 +54,17 @@
           <div class="form-outline mb-3">
             <label class="form-label" for="form3Example4">Contraseña</label>
             <InputText id="form3Example4" type="password" class="form-control form-control-lg" 
-                       @bind-Value="modeloLogin.Contrasena" placeholder="Digia tu contraseña" />
+                       @bind-Value="modeloLogin.Contrasena" placeholder="Digita tu contraseña" />
             <ValidationMessage For="@(() => modeloLogin.Contrasena)" />
           </div>
+
+          <!-- Mensaje de alerta para errores o éxitos en el login -->
+          @if (!string.IsNullOrEmpty(mensajeAlerta))
+          {
+              <div class="alert alert-@tipoAlerta" role="alert">
+                  @mensajeAlerta
+              </div>
+          }
 
           <!-- Botón de envío del formulario -->
           <div class="text-center text-lg-start mt-4 pt-2">
@@ -69,6 +78,9 @@
 </section>
 
 @code {
+    private string mensajeAlerta = "";
+    private string tipoAlerta = ""; // "success", "danger", etc.
+
     // Crear el modelo de datos para almacenar el correo electrónico y la contraseña ingresados
     private ModeloLogin modeloLogin = new ModeloLogin();
 
@@ -99,6 +111,9 @@
             {
                 // Mostrar un mensaje de login exitoso
                 await JSRuntime.InvokeVoidAsync("alert", "Login exitoso.");
+
+                mensajeAlerta = "Login exitoso.";
+                tipoAlerta = "success";
 
                 // Preparar el objeto JSON para consultar los roles asociados al usuario
                 var jsonConsultaRoles = new
@@ -219,13 +234,14 @@
             // Evaluar si la respuesta indica credenciales incorrectas (HTTP 401 Unauthorized)
             else if (respuestaVerificar.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
-                // Mostrar alerta de usuario o contraseña incorrectos
-                await JSRuntime.InvokeVoidAsync("alert", "Usuario o contraseña incorrectos.");
+                // Mostrar alerta de usuario o contraseña incorrectos con el mismo diseño CSS
+                mensajeAlerta = "Usuario o contraseña incorrectos.";
+                tipoAlerta = "danger";
             }
             else
             {
-                // Mostrar alerta genérica de error en login
-                await JSRuntime.InvokeVoidAsync("alert", "Error al iniciar sesión. Por favor, intente de nuevo.");
+                mensajeAlerta = "El usuario no existe en la base de datos.";
+                tipoAlerta = "danger";
             }
         }
         catch (Exception ex)

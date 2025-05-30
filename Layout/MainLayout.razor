@@ -1,13 +1,47 @@
 ﻿@inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
 
 @code {
     private bool mostrarMenu = false;
 
     protected override async Task OnInitializedAsync()
     {
+        Navigation.LocationChanged += OnLocationChanged;
+        await VerificarSesion();
+        await RedirigirSiNoHaySesion();
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        await VerificarSesion();
+        await RedirigirSiNoHaySesion();
+        StateHasChanged();
+    }
+
+    private async Task VerificarSesion()
+    {
+        
+        @* await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "usuarioEmail"); *@
         var email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "usuarioEmail");
         mostrarMenu = !string.IsNullOrEmpty(email);
+    }
+
+    private async Task RedirigirSiNoHaySesion()
+    {
+        var rutaActual = Navigation.Uri.ToLower();
+        // Permite acceso libre solo al login
+        if (!mostrarMenu && !rutaActual.Contains("/login"))
+        {
+            Navigation.NavigateTo("/login", true);
+        }
+    }
+
+
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }
 

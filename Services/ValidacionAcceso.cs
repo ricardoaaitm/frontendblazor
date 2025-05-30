@@ -78,7 +78,7 @@ namespace FrontBlazor.Services
                 if (!rutasPermitidas.Contains(ruta))
                 {
                     await InteropJS.InvokeVoidAsync("alert", "No tiene permisos para acceder a esta página.");
-                    Navegacion.NavigateTo("/", true);
+                    Navegacion.NavigateTo("/home", true);
                     return;
                 }
 

@@ -1,21 +1,21 @@
-﻿<!-- Barra superior de navegación -->
-<div class="top-row ps-3 navbar navbar-dark">
-    <!-- Contenedor del menú de navegación -->
+﻿@using Microsoft.AspNetCore.Components;
+@using Microsoft.JSInterop;
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<!-- Barra superior de navegación -->
+<div class="top-row ps-3 navbar navbar-dark bg-custom-navbar" style="background-color: rgb(4,22,61);">
     <div class="container-fluid">
-        <!-- Enlace al nombre de la aplicación (generalmente en la parte superior izquierda) -->
-        <a class="navbar-brand" href="">FrontBlazor</a>
-        
-        <!-- Botón para colapsar/expandir el menú (cuando se ve en dispositivos móviles) -->
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span> <!-- Icono para el botón de colapso -->
+        <a class="navbar-brand"  href="">FrontBlazor</a>
+        <!-- Botón solo visible en móviles -->
+        <button title="Navigation menu" class="navbar-toggler d-md-none" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
         </button>
     </div>
 </div>
 
-<!--------------------------------------------------->
-<!-- Menú lateral (colapsable) que contiene los enlaces de navegación -->
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <!-- Contenedor que organiza los elementos de navegación en columnas -->
+<!-- Menú lateral fijo para pantallas medianas y grandes -->
+<div class="sidebar bg-light d-none d-md-block" style="background-color: rgb(24,28,92)!important;">
     <nav class="nav flex-column">
         <!-- Enlace a la página principal (Home) -->
         <div class="nav-item px-3">
@@ -39,8 +39,8 @@
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/variablesporindicador">
-                <span class="bi bi-list-nested-nav-menu"></span>
-                <span class="d-none d-md-inline"> Variables por Indicador</span>
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
+                <span> Variables por Indicador</span>
             </NavLink>
         </div>
 <!--------------------------------------------------->
@@ -75,7 +75,7 @@
             <!-- href="represenvisual": enlace a la página de contador -->
             <NavLink class="nav-link" href="represenvisual">
                 <!-- Icono para la opción represenvisual (símbolo de más en un cuadrado) -->
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Represenvisual
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Representación Visual
             </NavLink>
         </div>
 <!--------------------------------------------------->
@@ -109,7 +109,7 @@
             <!-- href="tipoactor": enlace a la página de contador -->
             <NavLink class="nav-link" href="tipoactor">
                 <!-- Icono para la opción tipoactor (símbolo de más en un cuadrado) -->
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Tipoactor
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Tipo actor
             </NavLink>
         </div>
 <!--------------------------------------------------->
@@ -125,7 +125,7 @@
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/tipoindicador">
                 <!-- Icono para tipoindicador -->
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> tipoindicador
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Tipo Indicador
             </NavLink>
         </div>
 <!--------------------------------------------------->
@@ -138,19 +138,245 @@
             </NavLink>
         </div>
 
+
+        <div class="nav-item px-3">
+            <!-- Cerrar Sesión -->
+            <NavLink class="nav-link" href="/login">
+                <!-- Botton para cerrar Sesión -->
+                <button type="button" @onclick="CerrarSesión" class="btn btn-danger">Cerrar Sesión</button>
+
+            </NavLink>
+        </div>
+
+
+
     </nav>
 </div>
 
+<!-- Menú lateral colapsable para móviles -->
+<div class="offcanvas offcanvas-start d-md-none @(collapseNavMenu ? "" : "show")" tabindex="-1" style="visibility:@(collapseNavMenu ? "hidden" : "visible");">
+    <div class="offcanvas-header" style="background-color: rgb(4,22,61);">
+        <h5 class="offcanvas-title text-light ">Menú</h5>
+        <button type="button" class="btn-close" @onclick="ToggleNavMenu"></button>
+    </div>
+    <div class="offcanvas-body" style="background-color: rgb(24,28,92);">
+        <nav class="nav flex-column">
+            <!-- Enlace a la página principal (Home) -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/home" Match="NavLinkMatch.All">
+                    <!-- Icono de inicio -->
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+<!---INICIO DEL MENU NUEVO AÑADIDO DE INDICADORES---->
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/indicador">
+                
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Indicador
+                </NavLink>
+            </div>
+
+<!---FIN DEL MENU NUEVO AÑADIDO DE INDICADORES---->
+<!--------------------------------------------------->
+            <!-- Enlace a la página de variablesporindicador -->
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/variablesporindicador">
+                    
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
+                    <span> Variables por Indicador</span>
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+             <!-- Enlace a la página de frecuencia -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/frecuencia">
+                    <!-- Icono para frecuencia -->
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Frecuencia
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+
+            <!-- Enlace a la página de Fuentes -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/fuente">
+                    <!-- Icono para fuentes -->
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Fuente
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+             <!-- Enlace a la página de fuentesporindicador -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/fuentesporindicador">
+                    <!-- Icono para fuentesporindicador -->
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Fuentes Por Indicador
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+
+             <!-- Enlace a la página de Represenvisual -->
+            <div class="nav-item px-3">
+                <!-- href="represenvisual": enlace a la página de contador -->
+                <NavLink class="nav-link" href="represenvisual">
+                    <!-- Icono para la opción represenvisual (símbolo de más en un cuadrado) -->
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Visual
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+
+             <!-- Enlace a la página de seccion -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/seccion">
+                    <!-- Icono para seccion -->
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Sección
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+             <!-- Enlace a la página de Sentido -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/sentido">
+                    <!-- Icono para Sentido -->
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Sentido
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+             <!-- Enlace a la página de actor -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/actor">
+                    <!-- Icono para actor -->
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Actor
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+             <!-- Enlace a la página de tipoactor -->
+            <div class="nav-item px-3">
+                <!-- href="tipoactor": enlace a la página de contador -->
+                <NavLink class="nav-link" href="tipoactor">
+                    <!-- Icono para la opción tipoactor (símbolo de más en un cuadrado) -->
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Tipo Actor
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+             <!-- Enlace a la página de rol -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/rol">
+                    <!-- Icono para rol -->
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Rol
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+             <!-- Enlace a la página de tipoindicador -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/tipoindicador">
+                    <!-- Icono para tipoindicador -->
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Tipo Indicador
+                </NavLink>
+            </div>
+<!--------------------------------------------------->
+             <!-- Enlace a la página de unidadmedicion -->
+            <div class="nav-item px-3">
+                <!-- href="unidadmedicion": enlace a la página de contador -->
+                <NavLink class="nav-link" href="unidadmedicion">
+                    <!-- Icono para la opción unidadmedicion (símbolo de más en un cuadrado) -->
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Unidad Medición
+                </NavLink>
+            </div>
+            
+            <div class="nav-item px-3">
+                <!-- Cerrar Sesión -->
+                <NavLink class="nav-link" href="login">
+                    <!-- Botton para cerrar Sesión -->
+                    <button type="button" @onclick="CerrarSesión" class="btn btn-danger">Cerrar Sesión</button>
+                </NavLink>
+            </div>
+
+        </nav>
+    </div>
+</div>
+
 @code {
-    // Variable booleana para gestionar si el menú de navegación está colapsado o expandido
     private bool collapseNavMenu = true;
-
-    // Propiedad que devuelve la clase CSS para colapsar el menú si está en estado 'true'
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    // Método para alternar el estado del menú (expandido o colapsado) cuando se hace clic en el botón
     private void ToggleNavMenu()
     {
-        collapseNavMenu = !collapseNavMenu; // Cambia el valor de la variable, alternando entre true y false
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task CerrarSesión()
+    {
+        // Limpiar todo el sessionStorage y localStorage
+        await JSRuntime.InvokeVoidAsync("eval", "sessionStorage.clear(); localStorage.clear();");
+
+        // Redirigir a la página de inicio de sesión
+        Navigation.NavigateTo("/login", true);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Lista de rutas a almacenar en sessionStorage
+        var listaRutas = new List<string>
+        {
+            "/variablesporindicador",
+            "/frecuencia",
+            "/fuente",
+            "/fuentesporindicador",
+            "/represenvisual",
+            "/seccion",
+            "/sentido",
+            "/actor",
+            "/tipoactor",
+            "/rol",
+            "/tipoindicador",
+            "/unidadmedicion"
+        };
+
+        // Almacenar cada ruta en sessionStorage
+        foreach (var nombreRuta in listaRutas)
+        {
+            if (!string.IsNullOrEmpty(nombreRuta))
+            {
+                // Asegúrate que nombreRuta tenga el formato correcto (ej: "/variablesporindicador")
+                await JSRuntime.InvokeVoidAsync(
+                    "sessionStorage.setItem",
+                    $"ruta_{nombreRuta}",
+                    nombreRuta
+                );
+            }
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task ValidarAccesoAsync()
+    {
+        var rutasPermitidas = new List<string>
+        {
+            "/home",
+            "/indicador",
+            "/variablesporindicador",
+            "/frecuencia",
+            "/fuente",
+            "/fuentesporindicador",
+            "/represenvisual",
+            "/seccion",
+            "/sentido",
+            "/actor",
+            "/tipoactor",
+            "/rol",
+            "/tipoindicador",
+            "/unidadmedicion"
+        };
+
+        var ruta = Navigation.Uri.Replace(Navigation.BaseUri, "/").Split('?')[0];
+
+        // Las rutas permitidas deben tener el mismo formato
+        if (!rutasPermitidas.Contains(ruta, StringComparer.OrdinalIgnoreCase))
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "No tiene permisos para acceder a esta página.");
+            Navigation.NavigateTo("/home", true);
+            return;
+        }
     }
 }
